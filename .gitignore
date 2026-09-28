@@ -1,0 +1,22 @@
+# Volunteer recordings — never commit real participant data
+data/raw/
+
+# Generated feature tables and model artifacts (regenerable, and may contain participant-derived info)
+data/features.csv
+data/cv_results.csv
+data/ablation_results.csv
+data/oof_predictions.csv
+models/*.json
+models/*.onnx
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+external_data/*/
+!external_data/README.md

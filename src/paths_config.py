@@ -1,0 +1,77 @@
+"""
+paths_config.py
+
+Single source of truth for external-drive paths used across the project.
+
+Your external drive's letter can change between Windows sessions (D:, E:,
+etc. depending on what else is plugged in). When that happens, this is the
+ONLY file you need to edit — every other script imports from here instead
+of hardcoding its own path.
+
+Recommended fix so this stops happening: lock the drive letter permanently
+via Disk Management > right-click the partition > Change Drive Letter and
+Paths. Until then, just update EXTERNAL_DRIVE_ROOT below whenever it shifts.
+"""
+
+import os
+import shutil
+from pathlib import Path
+
+# TODO: update this one line whenever your external drive's letter changes.
+EXTERNAL_DRIVE_ROOT = "E:/Yoihenba/Thesis project/DATAS"
+
+# Local external_data/ directory inside the project repository
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+LOCAL_EXTERNAL_DATA = PROJECT_ROOT / "external_data"
+
+# Stage 1 external datasets (checks local external_data/ first, falls back to external drive)
+_local_desktop = LOCAL_EXTERNAL_DATA / "desktop_activities"
+if _local_desktop.is_dir() and any(_local_desktop.glob("*.csv")):
+    DESKTOP_ACTIVITIES_DIR = str(_local_desktop)
+else:
+    DESKTOP_ACTIVITIES_DIR = f"{EXTERNAL_DRIVE_ROOT}/eye movement/desktop_activity_archive/dataset_normalised_5mins/"
+
+_local_svarah = LOCAL_EXTERNAL_DATA / "svarah"
+if _local_svarah.is_dir() and any(_local_svarah.glob("*.wav")):
+    SVARAH_DIR = str(_local_svarah)
+else:
+    SVARAH_DIR = f"{EXTERNAL_DRIVE_ROOT}/svarah/"
+
+_local_trial = LOCAL_EXTERNAL_DATA / "real_life_trial"
+if _local_trial.is_dir() and any(_local_trial.rglob("*.mp4")):
+    REAL_LIFE_TRIAL_DIR = str(_local_trial)
+else:
+    REAL_LIFE_TRIAL_DIR = f"{EXTERNAL_DRIVE_ROOT}/real_life_trial/"
+
+# Not used this semester (Future Work only — see proposal Section 9a).
+# Left here only as a reference for later, not imported by any script yet.
+MPIIGAZE_ARCHIVE_PATH = f"{EXTERNAL_DRIVE_ROOT}/eye movement/MPIIGaze.tar.gz"
+
+# Your own volunteer data (Stage 2) — update if this also lives on the
+# external drive rather than your local project folder.
+VOLUNTEER_RAW_DIR = str(PROJECT_ROOT / "data" / "raw")
+
+# Project-internal inputs/outputs. Anchored to PROJECT_ROOT so every script
+# behaves the same no matter which directory it is launched from (a relative
+# "models/..." path used to silently skip z-scoring when run from src/).
+DATA_DIR = PROJECT_ROOT / "data"
+MODELS_DIR = PROJECT_ROOT / "models"
+LABELS_PATH = DATA_DIR / "labels.csv"
+FEATURES_PATH = DATA_DIR / "features.csv"
+BASELINE_STATS_PATH = MODELS_DIR / "baseline_stats.json"
+
+
+def resolve_project_path(path) -> Path:
+    """Resolves a path from labels.csv: absolute paths pass through, relative
+    ones are taken relative to PROJECT_ROOT (not the current directory)."""
+    path = Path(path)
+    return path if path.is_absolute() else PROJECT_ROOT / path
+
+# Auto-ensure ffmpeg is on system PATH (especially if newly installed via winget).
+# Globs for any installed version instead of hardcoding one, so a winget
+# upgrade doesn't silently break audio extraction.
+if not shutil.which("ffmpeg"):
+    winget_packages = Path.home() / "AppData/Local/Microsoft/WinGet/Packages"
+    for ffmpeg_exe in sorted(winget_packages.glob("Gyan.FFmpeg*/ffmpeg-*/bin/ffmpeg.exe"), reverse=True):
+        os.environ["PATH"] = str(ffmpeg_exe.parent) + os.pathsep + os.environ.get("PATH", "")
+        break

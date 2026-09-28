@@ -1,0 +1,14 @@
+# Only the contrib build: mediapipe depends on opencv-contrib-python, and
+# installing it alongside opencv-python makes the two fight over the cv2 module.
+opencv-contrib-python==4.10.0.84
+mediapipe==0.10.14
+openai-whisper
+webrtcvad-wheels
+soundfile
+scipy
+xgboost
+scikit-learn
+pandas
+numpy==1.26.4
+# Only needed by src/download_svarah.py (reads the Hugging Face parquet cache)
+pyarrow
