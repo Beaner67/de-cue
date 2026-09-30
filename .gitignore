@@ -9,6 +9,9 @@ data/oof_predictions.csv
 models/*.json
 models/*.onnx
 
+# Browser screenshots and the headless Chrome profile from UI checks
+shots/
+
 # Python
 __pycache__/
 *.pyc
