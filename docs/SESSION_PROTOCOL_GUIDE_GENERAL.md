@@ -93,7 +93,7 @@ ffmpeg -i session_raw.mp4 -ss 00:01:10 -to 00:01:55 -c:v copy -c:a copy data/raw
 ```
 
 ### 5.2 Folder Organization Standard
-Store the video clips under [data/raw/](file:///e:/Yoihenba/Thesis%20project/model%20training/ai-interview-detection/data/raw/):
+Store the video clips under [data/raw/](../data/raw/):
 
 ```text
 data/raw/
@@ -116,7 +116,7 @@ data/raw/
 
 Once clips are saved in `data/raw/`:
 
-1. **Add clip metadata to [data/labels.csv](file:///e:/Yoihenba/Thesis%20project/model%20training/ai-interview-detection/data/labels.csv)**:
+1. **Add clip metadata to [data/labels.csv](../data/labels.csv)**:
    ```csv
    clip_id,volunteer_id,condition,question_num,question_type,label,video_path,audio_path,question_end_time
    v01_unassisted_q1,volunteer_01,unassisted,1,behavioral,0,data/raw/volunteer_01/unassisted_q1.mp4,,0.0

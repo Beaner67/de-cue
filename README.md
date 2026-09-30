@@ -127,6 +127,8 @@ even when it isn't on `PATH` yet.
 `src/paths_config.py` checks the local `external_data/` folder first. If a
 dataset isn't there, it falls back to the external drive set by
 `EXTERNAL_DRIVE_ROOT`. **If the drive letter changes, edit that one line.**
+See [external_data/README.md](external_data/README.md) for file counts and
+the privacy notice for the Real-life Trial footage.
 
 To export Svarah as WAV files from the Hugging Face parquet cache:
 
@@ -287,6 +289,7 @@ de-cue/
 │   ├── train_model.py           # leave-speaker-out CV + final model export
 │   ├── evaluate_model.py        # feature-group ablation study
 │   └── download_svarah.py       # Svarah parquet -> WAV export
+├── AGENTS.md                    # instructions for AI coding assistants
 ├── requirements.txt
 └── README.md
 ```
