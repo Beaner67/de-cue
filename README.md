@@ -78,8 +78,8 @@ The detector uses 12 features in three groups. Every extractor returns
 | Group | Script | Features | Method |
 |---|---|---|---|
 | **Gaze** | `extract_gaze.py` | `fixation_stability`, `saccade_rate`, `offcam_deviation`, `blink_rate` | MediaPipe FaceMesh iris tracking, measured relative to the eye corners (cancels head movement and resolution). Uses a fixed-threshold saccade detector and EAR-based blink detection. |
-| **Latency** | `extract_latency.py` | `response_delay`, `pause_rate`, `avg_pause_length`, `pause_variance` | WebRTC VAD on 30 ms chunks of 16 kHz mono audio. Pause rate is per minute. |
-| **Linguistic** | `extract_linguistic.py` | `filler_rate`, `speaking_rate`, `lexical_diversity`, `sentence_complexity` | Whisper transcription with a verbatim prompt so fillers are kept. Fillers are matched as whole words. |
+| **Latency** | `extract_latency.py` | `response_delay`, `pause_rate`, `avg_pause_length`, `pause_variance` | WebRTC VAD on 30 ms chunks of 16 kHz mono audio. A chunk only counts as speech if it is also within 30 dB of the clip's loud level, so faint breathing and clicks are ignored; the answer starts at the first speech run of at least 0.3 s. Pause rate is per minute. |
+| **Linguistic** | `extract_linguistic.py` | `filler_rate`, `speaking_rate`, `lexical_diversity`, `sentence_complexity` | Whisper `small` transcription with a verbatim prompt so fillers are kept. Fillers are matched as whole words. |
 
 ---
 

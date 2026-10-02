@@ -65,6 +65,7 @@
   .label { margin: 0; font-size: 12px; line-height: 16px; font-weight: 500; color: var(--text-3); }
   .answer { white-space: pre-wrap; font-size: 1em; line-height: 1.5625; color: var(--text); }
   .answer.pending { color: var(--text-2); }
+  #more { flex: none; padding: var(--space-2) var(--space-4); border-top: 1px solid var(--border); font-size: 12px; line-height: 16px; font-weight: 500; color: var(--text-2); text-align: center; cursor: pointer; }
   #moved { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: var(--space-5); font-size: 14px; line-height: 21px; color: var(--text-2); }
 </style>
 </head>
@@ -78,6 +79,7 @@
   </header>
   <div id="note"></div>
   <main id="main"><div class="center"><p class="line">Connecting to the session…</p></div></main>
+  <div id="more" hidden>More below</div>
 </div>
 <div id="moved" hidden>The assistant is open in its floating window.</div>
 
@@ -88,6 +90,7 @@ const main = document.getElementById('main');
 const dot = document.getElementById('dot');
 const statusEl = document.getElementById('status');
 const note = document.getElementById('note');
+const more = document.getElementById('more');
 let seq = 0;
 let renderId = 0;
 let fontSize = 16;
@@ -136,7 +139,10 @@ function showIntro() {
 function showMode() {
   renderId++;  // cancels any answer still streaming
   showing = 'mode';
-  if (!introDone) return showIntro();
+  if (!introDone) {
+    showIntro();
+    return updateMore();
+  }
   if (mode.assistant_on) {
     setStatus('Listening', 'live');
     const level = el('div', 'level');
@@ -146,6 +152,7 @@ function showMode() {
     setStatus('Paused');
     main.replaceChildren(box('center', el('h1', 'heading', 'Paused'), el('p', 'line', mode.message || 'The assistant is off.')));
   }
+  updateMore();
 }
 
 function ack(ev, waitedMs) {
@@ -156,9 +163,14 @@ function ack(ev, waitedMs) {
   }).catch(() => {});
 }
 
-function nearBottom() {
-  return main.scrollHeight - main.scrollTop - main.clientHeight < 60;
+// The view never scrolls by itself: following the newest words moved the text the
+// volunteer was still reading. When the answer runs past the bottom, a bar says so.
+function updateMore() {
+  more.hidden = main.scrollHeight - main.scrollTop - main.clientHeight <= 4;
 }
+main.addEventListener('scroll', updateMore);
+window.addEventListener('resize', updateMore);
+more.onclick = () => { main.scrollTop += main.clientHeight - 50; };
 
 function renderAnswer(ev) {
   const id = ++renderId;
@@ -167,6 +179,7 @@ function renderAnswer(ev) {
   main.scrollTop = 0;
   const thinking = el('div', 'answer pending', 'Generating answer…');
   main.replaceChildren(box('stream', el('p', 'label', 'Suggested answer'), thinking));
+  updateMore();
   setStatus('Answering', 'live');
 
   setTimeout(() => {
@@ -180,13 +193,12 @@ function renderAnswer(ev) {
     let i = 0;
     (function step() {
       if (id !== renderId) return;
-      const follow = nearBottom();
       while (i < tokens.length) {
         const t = tokens[i++];
         answer.append(t);
         if (/\S/.test(t)) break;
       }
-      if (follow) main.scrollTop = main.scrollHeight;
+      updateMore();
       if (i < tokens.length) setTimeout(step, interval);
       else setStatus('Listening', 'live');
     })();
@@ -221,8 +233,8 @@ async function poll() {
   }
 }
 
-document.getElementById('bigger').onclick = () => { fontSize = Math.min(28, fontSize + 1); app.style.fontSize = fontSize + 'px'; };
-document.getElementById('smaller').onclick = () => { fontSize = Math.max(12, fontSize - 1); app.style.fontSize = fontSize + 'px'; };
+document.getElementById('bigger').onclick = () => { fontSize = Math.min(28, fontSize + 1); app.style.fontSize = fontSize + 'px'; updateMore(); };
+document.getElementById('smaller').onclick = () => { fontSize = Math.max(12, fontSize - 1); app.style.fontSize = fontSize + 'px'; updateMore(); };
 
 // "Keep on top": Document Picture-in-Picture (Chrome and Edge 116+) gives a
 // small always-on-top window, like the overlay of a real assistant app.
@@ -242,11 +254,14 @@ async function popOut() {
   moved.hidden = false;
   introDone = true;
   if (showing === 'mode') showMode();
+  updateMore();
+  pip.addEventListener('resize', updateMore);
   pip.addEventListener('pagehide', () => {
     moved.hidden = true;
     document.body.prepend(app);
     introDone = false;  // offer "Keep on top" again
     if (showing === 'mode') showMode();
+    updateMore();
   });
 }
 

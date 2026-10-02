@@ -31,6 +31,8 @@ To prevent ordering and fatigue bias, alternate whether the participant does the
 | `volunteer_01`, `03`, `05`, `07`, `09`, `11` | **Unassisted** (Set A) | **Assisted** (Set B) |
 | `volunteer_02`, `04`, `06`, `08`, `10`, `12` | **Assisted** (Set A) | **Unassisted** (Set B) |
 
+Within each round, the questions are not asked in the order listed below. The assistant tool mixes them up in a balanced way: across every four volunteers of the same group, each question comes first, second, third and last exactly once. Read the questions in the order the control panel shows.
+
 ---
 
 ## 3. Accessible Question Bank (General Knowledge & Everyday Situations)

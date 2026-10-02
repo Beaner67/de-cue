@@ -5,7 +5,8 @@ Extracts response-timing features from an audio or video clip using voice
 activity detection (webrtcvad).
 
 Feature group (per proposal Section 4.3.3):
-    - response_delay   : seconds between question-end and answer-start
+    - response_delay   : seconds between question-end and answer-start (the first
+                         >= 0.3 s run of speech, so a click or breath doesn't count)
     - pause_rate       : mid-answer pauses >= 0.3s per minute of answer
                          (a raw count grew with answer length, so it mostly
                          measured how long someone talked)
@@ -33,6 +34,17 @@ from baseline_utils import zscore_dict
 from paths_config import EXTERNAL_DRIVE_ROOT  # imports paths_config to auto-check ffmpeg
 
 LATENCY_KEYS = ["response_delay", "pause_rate", "avg_pause_length", "pause_variance"]
+
+# webrtcvad also fires on faint non-speech sounds: on the first pilot call recordings,
+# breathing and small noises around -60 dB right after the question end made
+# response_delay ~0 s for nearly every clip. A frame therefore only counts as speech
+# if it is also within this many dB of the clip's own loud level (95th percentile).
+# Relative to the loud level, not the background, because Stage 1's Svarah clips are
+# almost all speech and have no background to measure.
+SPEECH_LEVEL_RANGE_DB = 30.0
+# The answer starts at the first speech run at least this long, so a key click or a
+# short "mm" at the question end isn't taken as the answer.
+MIN_ONSET_SPEECH_SEC = 0.3
 
 
 def _load_16k_mono_pcm(path: str) -> tuple[bytes, int]:
@@ -121,6 +133,7 @@ def extract_latency_features(audio_path: str, question_end_time: Optional[float]
     bytes_per_frame = int(sample_rate * frame_sec * 2)  # 960 bytes per 30ms at 16 kHz
 
     speech_flags = []
+    levels_db = []
     if pcm_bytes:
         vad = webrtcvad.Vad(2)  # aggressiveness 0-3; 2 is robust for room audio
         for offset in range(0, len(pcm_bytes) - bytes_per_frame + 1, bytes_per_frame):
@@ -130,6 +143,12 @@ def extract_latency_features(audio_path: str, question_end_time: Optional[float]
             except Exception:
                 is_speech = False
             speech_flags.append(is_speech)
+            samples = np.frombuffer(chunk, dtype=np.int16).astype(np.float32) / 32768
+            levels_db.append(20 * math.log10(math.sqrt(float(np.mean(samples ** 2))) + 1e-9))
+
+    if speech_flags:
+        gate_db = float(np.percentile(levels_db, 95)) - SPEECH_LEVEL_RANGE_DB
+        speech_flags = [flag and level > gate_db for flag, level in zip(speech_flags, levels_db)]
 
     if question_end_time is None:
         question_end_frame = 0
@@ -143,7 +162,15 @@ def extract_latency_features(audio_path: str, question_end_time: Optional[float]
         features = {key: float("nan") for key in LATENCY_KEYS}
         return zscore_dict("latency", features, keys_to_normalize=LATENCY_KEYS) if normalize else features
 
-    first_speech_idx = speech_indices[0]
+    # Answer start: the first sustained run of speech. A very short answer with no
+    # run that long ("Yes.") falls back to its first speech frame.
+    min_run = max(1, round(MIN_ONSET_SPEECH_SEC / frame_sec))
+    first_speech_idx, run = speech_indices[0], 0
+    for i in range(question_end_frame, len(speech_flags)):
+        run = run + 1 if speech_flags[i] else 0
+        if run == min_run:
+            first_speech_idx = i - min_run + 1
+            break
     last_speech_idx = speech_indices[-1]
 
     # 1. response_delay: seconds of silence between question end and first speech

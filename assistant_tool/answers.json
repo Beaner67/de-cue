@@ -1,7 +1,12 @@
 {
   "settings": {
     "answer_delay_s": 1.5,
-    "words_per_second": 15
+    "words_per_second": 15,
+    "delay_by_difficulty": {
+      "easy": 0.5,
+      "medium": 1.25,
+      "hard": 2.0
+    }
   },
   "test_answer": "This is a test answer. If you can read this, the assistant is working.\n\nDuring the assisted round, a suggested answer will appear here about a second and a half after the interviewer finishes each question.",
   "sets": {
@@ -9,52 +14,60 @@
       {
         "num": 1,
         "type": "behavioral",
-        "question": "Can you tell me about a time you had to work under a tight deadline with incomplete requirements? How did you prioritize what to build first?",
-        "answer": "In my third-year group project, we had two weeks to build a library management web app, but the requirements from our faculty were only half written.\n\n• First, I listed every feature we were sure about and asked our guide to confirm the top three: book search, issue and return, and login.\n• We built those as a working core in the first week, and treated reports and fines as optional.\n• I kept a shared list of open questions and got them answered at our weekly check-in instead of guessing.\n• When the missing requirements came in, most of them fit on top of the core without rework.\n\nWe delivered on time. The lesson I took was to build the part you're certain about first, and make the unknowns explicit early."
+        "difficulty": "medium",
+        "question": "Can you tell me about a time you worked on a group project, event, or team task where someone wasn't doing their share of the work? How did you handle that situation?",
+        "answer": "In a group project, one member kept missing meetings and hadn't started his part.\n\n• I messaged him privately to ask if he was okay.\n• He was busy with exams, so we gave him a smaller section.\n• We made a shared checklist so everyone could see progress.\n\nWe finished on time. Talking calmly and privately worked better than blaming him."
       },
       {
         "num": 2,
         "type": "behavioral",
-        "question": "Describe a situation where you had a technical disagreement with a teammate or peer. How did you communicate your perspective and resolve it?",
-        "answer": "During a mini project, a teammate wanted to store everything in one big JSON file, and I thought we needed a proper database.\n\n• Instead of arguing, I suggested we list what the app actually had to do: several users editing at once, and searching records.\n• I built a quick test showing the JSON file got corrupted when two people saved at the same time.\n• He pointed out that setup time mattered to him, which was fair, so we chose SQLite: a real database with almost no setup.\n• We wrote the decision in our README so nobody reopened it later.\n\nWhat I learned is to argue with evidence and requirements, not opinions, and to take the other person's concern seriously. His point about simplicity shaped the final choice."
+        "difficulty": "easy",
+        "question": "Describe a time when you had multiple assignments, tasks, or deadlines piling up at the same time. How did you prioritize what to do first?",
+        "answer": "Last semester I had two assignments and a club event in the same week.\n\n• I listed every task with its deadline and how long it would take.\n• I did the most urgent and important work first.\n• I broke big tasks into small steps so they felt manageable.\n• I asked a friend to help with the event posters.\n\nEverything got done on time. A simple list and asking for help early saved me a lot of stress."
       },
       {
         "num": 3,
-        "type": "technical",
-        "question": "Can you explain the key differences between SQL (relational) and NoSQL databases, and what factors guide your decision to choose one over the other in a system architecture?",
-        "answer": "SQL databases store data in tables with a fixed schema and relationships between them, and they give strong ACID guarantees. Examples are PostgreSQL and MySQL.\n\nNoSQL is a family of databases: document stores like MongoDB, key-value stores like Redis, wide-column stores like Cassandra, and graph databases. They have flexible schemas and are usually designed to scale horizontally.\n\nHow I'd choose:\n• Structured data with many relationships and transactions, like payments or orders: SQL.\n• Semi-structured or fast-changing data, very high write volume, or simple lookups at huge scale: NoSQL.\n• Consistency: SQL gives strong consistency by default, while many NoSQL systems trade some of it for availability and speed.\n\nIn practice many systems use both, for example PostgreSQL as the main store and Redis as a cache."
+        "type": "opinion",
+        "difficulty": "medium",
+        "question": "In your opinion, what are the biggest advantages and disadvantages of using Artificial Intelligence tools (like ChatGPT) in schools and college education?",
+        "answer": "AI tools like ChatGPT help students, but they have risks.\n\nAdvantages:\n• They explain hard topics simply.\n• They help with ideas and grammar.\n\nDisadvantages:\n• Students may copy instead of learning.\n• They can give wrong information.\n\nAI works best as a study helper, not a replacement for thinking."
       },
       {
         "num": 4,
-        "type": "technical",
-        "question": "What is the difference between concurrency and parallelism, and how does Python's Global Interpreter Lock (GIL) affect them in CPU-bound vs. I/O-bound tasks?",
-        "answer": "Concurrency means handling multiple tasks at once by interleaving them. Parallelism means actually running multiple tasks at the same instant on multiple CPU cores.\n\nIn CPython, the Global Interpreter Lock lets only one thread execute Python bytecode at a time.\n\n• I/O-bound tasks, like network calls or file reads: threads still help a lot, because a thread releases the GIL while it waits for I/O. Threading or asyncio works well here.\n• CPU-bound tasks, like heavy calculations: threads don't speed things up, because they take turns holding the GIL. You use multiprocessing instead, where each process has its own interpreter and its own GIL, or libraries like NumPy that release the GIL inside their C code.\n\nNewer Python versions also offer an optional free-threaded build without the GIL, but it isn't the default yet."
+        "type": "conceptual",
+        "difficulty": "hard",
+        "question": "If someone asked you to explain how cloud storage (like Google Drive or iCloud) works compared to saving files on a USB pen drive, how would you explain it in simple words?",
+        "answer": "A pen drive is like keeping your files in a small box in your pocket. They are stored inside the drive, so if you lose it, the files are gone.\n\nCloud storage like Google Drive is like a locker in a big, secure building run by a company. Your files travel over the internet to their computers.\n\n• You can open them on any device with internet.\n• The company keeps backups, but you trust them with your data."
       }
     ],
     "B": [
       {
         "num": 1,
         "type": "behavioral",
-        "question": "Tell me about a complex project where something went critically wrong in production or testing. How did you diagnose the root cause and handle it?",
-        "answer": "In a hackathon project, our app worked perfectly on our laptops but kept crashing on the demo server an hour before judging.\n\n• First I checked the server logs instead of guessing. The error was the app running out of database connections.\n• I reproduced it locally by sending many requests at once, and saw that every request opened a new connection and never closed it.\n• The fix was to use a connection pool and close connections properly. We tested it under load and redeployed.\n• Afterwards, I added a simple load test to our checklist before any demo.\n\nThe main lesson was to trust the logs and reproduce the problem first. Once we could reproduce it on demand, the fix took about twenty minutes."
+        "difficulty": "medium",
+        "question": "Tell me about a situation where something you planned (like a trip, an event, or a project) went completely wrong. How did you adapt and deal with it?",
+        "answer": "Last year my friends and I planned a weekend trip, and on the morning we left, our train was cancelled because of heavy rain.\n\n• We stayed calm and looked for other options.\n• We found a bus a few hours later and booked seats right away.\n• I called the guesthouse so they would keep our rooms.\n\nThe trip was shorter but still fun. It taught me to always have a backup plan and focus on solutions."
       },
       {
         "num": 2,
         "type": "behavioral",
-        "question": "Can you describe an instance where you had to quickly learn an unfamiliar technology, language, or framework to complete an assignment? What was your learning strategy?",
-        "answer": "For an internship task, I had to build a small dashboard in React, and I had only used plain HTML and JavaScript before. I had about ten days.\n\n• I started with the official React tutorial rather than random videos, just enough to understand components, props and state.\n• On day two I built the smallest possible version of the real task, so I was learning on the actual problem.\n• Whenever I got stuck, I read the documentation for that one concept and looked at how an open-source dashboard handled it.\n• I kept notes of my mistakes, like forgetting keys in lists, so I didn't repeat them.\n\nI finished on time. My strategy now is always the same: learn the core concepts quickly, build something real immediately, and fill in the gaps as they come up."
+        "difficulty": "easy",
+        "question": "Describe an instance where you had to learn a completely new skill, hobby, or subject from scratch. What was your strategy for getting good at it?",
+        "answer": "A couple of years ago I started learning the guitar with no musical background.\n\n• I began with free YouTube lessons and four basic chords.\n• I practised twenty minutes every day.\n• I picked songs I liked, which kept me motivated.\n• A friend who plays corrected my mistakes.\n\nAfter a few months I could play several songs. My strategy is to start small, practise daily and get feedback."
       },
       {
         "num": 3,
-        "type": "technical",
-        "question": "Can you explain what happens under the hood when a user types a URL (like https://example.com) into a browser and presses Enter, from DNS lookup to DOM rendering?",
-        "answer": "1. The browser parses the URL and checks its cache. DNS resolution then turns example.com into an IP address, checking the browser cache, the OS cache, and then a DNS resolver.\n2. The browser opens a TCP connection to that IP on port 443 and does a TLS handshake, which sets up encryption and verifies the server's certificate.\n3. It sends an HTTP GET request. The server, often behind a load balancer or CDN, returns a response containing HTML.\n4. The browser parses the HTML into the DOM and the CSS into the CSSOM, and requests other resources like scripts, stylesheets and images.\n5. JavaScript runs and can change the DOM.\n6. The DOM and CSSOM combine into a render tree. The browser then does layout, paint and compositing to draw the page on screen."
+        "type": "opinion",
+        "difficulty": "medium",
+        "question": "What do you think are the positive and negative impacts of social media algorithms on how people discover news and spend their daily time?",
+        "answer": "Social media algorithms show us content based on what we click.\n\nPositive:\n• We quickly find topics we care about.\n• Small creators can reach big audiences.\n\nNegative:\n• We mostly see views we already agree with.\n• Endless feeds keep us scrolling too long.\n\nThe key is balance and a mix of sources."
       },
       {
         "num": 4,
-        "type": "technical",
-        "question": "Explain the concept of containerization using Docker versus traditional virtual machines (VMs). What are the advantages and security trade-offs?",
-        "answer": "A virtual machine runs a full guest operating system on a hypervisor, so each VM has its own kernel. A Docker container shares the host's kernel and packages only the application and its dependencies, isolated with namespaces and cgroups.\n\nAdvantages of containers:\n• Much lighter and faster to start: seconds instead of minutes.\n• The same environment from development to production.\n• Many more containers than VMs fit on the same server.\n\nSecurity trade-offs:\n• VMs isolate more strongly, because a kernel exploit inside a container can affect the host and other containers.\n• Containers running as root or with extra privileges are risky.\n• Mitigations: run as a non-root user, use minimal base images, scan images, and apply seccomp or AppArmor profiles.\n\nFor untrusted multi-tenant workloads, teams often run containers inside VMs to get both."
+        "type": "conceptual",
+        "difficulty": "hard",
+        "question": "Electric vehicles (EVs) are becoming very popular. What do you see as the main benefits and the main challenges or drawbacks of switching from petrol cars to electric cars?",
+        "answer": "EVs have clear benefits, but also challenges.\n\nBenefits:\n• No exhaust, so cleaner city air.\n• Charging is much cheaper than petrol.\n\nChallenges:\n• They cost more to buy.\n• Few charging stations outside cities.\n• Charging takes longer than refuelling.\n\nEVs are the future once charging gets easier and prices fall."
       }
     ]
   }

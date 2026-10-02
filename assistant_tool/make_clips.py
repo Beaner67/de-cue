@@ -22,6 +22,9 @@ early (positive). A constant offset shifts every response_delay in a session
 by the same amount, which per-speaker centering in training removes anyway.
 """
 
+# Lets the "X | None" type hints run on Python 3.9 as well as in the 3.12 venv.
+from __future__ import annotations
+
 import argparse
 import csv
 import json
@@ -31,6 +34,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+# pyrefly: ignore [missing-import]
 from paths_config import LABELS_PATH, PROJECT_ROOT, VOLUNTEER_RAW_DIR  # noqa: E402  (also puts ffmpeg on PATH)
 
 LABEL_COLUMNS = ["clip_id", "volunteer_id", "condition", "question_num", "question_type",

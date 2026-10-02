@@ -23,6 +23,10 @@ Timings are appended to data/raw/volunteer_XX/session_log.jsonl, which
 make_clips.py uses to cut the recording into per-question clips.
 """
 
+# Lets the "X | None" type hints run on Python 3.9, the system Python on the
+# research laptop, as well as in the 3.12 venv.
+from __future__ import annotations
+
 import argparse
 import json
 import queue
@@ -50,6 +54,8 @@ CONNECTED_WINDOW_S = POLL_TIMEOUT_S + 10
 # Control-page key timestamps are trusted only if this close. Generous because a
 # press can wait in the page's queue behind a slow request before it is sent.
 MAX_CLIENT_CLOCK_SKEW_S = 30
+# Allowed range for the per-question answer delay set through each question's difficulty.
+MIN_DELAY_S, MAX_DELAY_S = 0.5, 2.0
 
 
 def now_iso(t: float) -> str:
@@ -88,23 +94,63 @@ class LogWriter:
         self.thread.join(timeout_s)
 
 
+def answer_delay(question: dict, settings: dict) -> float:
+    """Seconds from the question-end mark to the answer appearing. Fixed per
+    question through its difficulty, so a question gets the same delay for every
+    volunteer; a question without a difficulty uses answer_delay_s."""
+    difficulty = question.get("difficulty")
+    if difficulty is None:
+        return float(settings["answer_delay_s"])
+    try:
+        return float(settings["delay_by_difficulty"][difficulty])
+    except KeyError:
+        raise ValueError(f'difficulty "{difficulty}" has no delay in settings.delay_by_difficulty') from None
+
+
+def williams_orders(n: int) -> list[list[int]]:
+    """Balanced Latin square (Williams design) over n questions. Across the orders,
+    every question appears equally often in every position and directly follows
+    every other question equally often. A random shuffle cannot promise that with
+    only a handful of volunteers. Odd n needs every order reversed as well."""
+    first, low, high = [0], 1, n - 1
+    while len(first) < n:
+        first.append(low)
+        low += 1
+        if len(first) < n:
+            first.append(high)
+            high -= 1
+    orders = [[(i + shift) % n for i in first] for shift in range(n)]
+    return orders if n % 2 == 0 else orders + [order[::-1] for order in orders]
+
+
 def build_plan(volunteer_num: int, bank: dict) -> list[dict]:
     """Counterbalanced order from SESSION_PROTOCOL_GUIDE.md Section 2:
     odd volunteers do Unassisted (Set A) then Assisted (Set B); even
-    volunteers do Assisted (Set A) then Unassisted (Set B)."""
+    volunteers do Assisted (Set A) then Unassisted (Set B).
+
+    Within each round the questions follow a Williams order. Volunteers of the
+    same parity get the same sets in the same roles, so consecutive ones
+    (1, 3, 5, 7 and 2, 4, 6, 8) step through the orders together."""
     if volunteer_num % 2 == 1:
         rounds = [("unassisted", "A"), ("assisted", "B")]
     else:
         rounds = [("assisted", "A"), ("unassisted", "B")]
+    group_index = (volunteer_num - 1) // 2
     plan = []
     for round_num, (condition, set_name) in enumerate(rounds, start=1):
-        for q in bank["sets"][set_name]:
+        questions = bank["sets"][set_name]
+        orders = williams_orders(len(questions))
+        for position, index in enumerate(orders[group_index % len(orders)], start=1):
+            q = questions[index]
             plan.append({
                 "round": round_num,
                 "condition": condition,
                 "question_set": set_name,
+                "position": position,
                 "question_num": q["num"],
                 "question_type": q["type"],
+                "difficulty": q.get("difficulty"),
+                "delay_s": answer_delay(q, bank["settings"]),
                 "question": q["question"],
                 "answer": q["answer"],
             })
@@ -133,6 +179,8 @@ class Session:
         self.recording_marked = False
         self.last_question_end_t = None
         self.question_end_by_answer: dict[str, float] = {}
+        self.first_shown_s: dict[str, float] = {}   # answer_id -> seconds from question end to first ack
+        self.current_answer_id = None                # the open assisted question's answer, for the control page
         self.bank_test_answer = ""
 
     # ---- volunteer-facing events -------------------------------------------------
@@ -206,10 +254,16 @@ class Session:
                 else:
                     self.cursor = max(0, self.cursor - 1)
                 self.phase = "waiting_question"
+                self.current_answer_id = None
                 self._log({"event": "back", "t": t, "cursor": self.cursor}, f"Went back to item {self.cursor + 1}")
                 self._push(self._mode_event())
                 return True, ""
             if name == "test":
+                # A test answer replaces whatever the volunteer's window shows, including a real
+                # answer still waiting out its delay, so it is only allowed before recording starts.
+                if self.recording_marked:
+                    return False, ("Test answers are only for before the recording starts. "
+                                   "Space sends each real answer by itself.")
                 answer_id = "test-" + uuid.uuid4().hex[:8]
                 self.question_end_by_answer[answer_id] = t
                 self._push({"type": "answer", "answer_id": answer_id,
@@ -233,9 +287,17 @@ class Session:
         except (TypeError, ValueError):
             return False, "Volunteer number must be between 1 and 99."
         bank = json.loads(ANSWERS_PATH.read_text(encoding="utf-8"))
+        try:
+            plan = build_plan(num, bank)
+        except ValueError as e:
+            return False, f"answers.json: {e}."
+        out_of_range = [f"Set {p['question_set']} Q{p['question_num']}" for p in plan
+                        if not MIN_DELAY_S <= p["delay_s"] <= MAX_DELAY_S]
+        if out_of_range:
+            return False, f"answers.json: delay outside {MIN_DELAY_S} to {MAX_DELAY_S} s for {', '.join(out_of_range)}."
         self.bank_test_answer = bank["test_answer"]
         self.settings = bank["settings"]
-        self.plan = build_plan(num, bank)
+        self.plan = plan
         self.volunteer_num = num
         self.session_id = uuid.uuid4().hex[:12]
         folder = Path(VOLUNTEER_RAW_DIR) / f"volunteer_{num:02d}"
@@ -245,6 +307,7 @@ class Session:
         self.phase = "waiting_question"
         self.recording_marked = False
         self.last_question_end_t = None
+        self.current_answer_id = None
         self.recent = []
         self._log({
             "event": "session_start", "t": t,
@@ -252,6 +315,13 @@ class Session:
             "settings": self.settings,
             "plan": [{k: v for k, v in item.items() if k not in ("question", "answer")} for item in self.plan],
         }, f"Session started for volunteer_{num:02d}")
+        # Odd volunteers get Set B assisted, even ones Set A, so unequal set means
+        # would mix a delay difference into the counterbalancing.
+        means = {name: sum(answer_delay(q, self.settings) for q in qs) / len(qs) for name, qs in bank["sets"].items()}
+        if max(means.values()) - min(means.values()) > 0.01:
+            note = "Warning: mean answer delay differs between sets (" + ", ".join(f"Set {k} {v:.2f} s" for k, v in means.items()) + ")"
+            print(note)
+            self.recent.append(note)
         self._push(self._mode_event())
         return True, ""
 
@@ -265,13 +335,16 @@ class Session:
         record = {"event": "question_end", "t": t, "remark": remark,
                   **{k: item[k] for k in ("round", "condition", "question_set", "question_num", "question_type")}}
         label = f"R{item['round']} {item['condition']} Q{item['question_num']}"
+        self.current_answer_id = None
         if item["condition"] == "assisted":
             answer_id = uuid.uuid4().hex[:10]
             record["answer_id"] = answer_id
+            record["delay_s"] = item["delay_s"]
             self.question_end_by_answer[answer_id] = t
+            self.current_answer_id = answer_id
             self._push({"type": "answer", "answer_id": answer_id,
                         "question": item["question"], "answer": item["answer"],
-                        "delay_s": self.settings["answer_delay_s"],
+                        "delay_s": item["delay_s"],
                         "words_per_second": self.settings["words_per_second"]})
         self._log(record, f"Question end{' (re-marked)' if remark else ''}: {label}")
         return True, ""
@@ -285,6 +358,7 @@ class Session:
                   f"Answer end: R{item['round']} {item['condition']} Q{item['question_num']}")
         self.cursor += 1
         self.last_question_end_t = None
+        self.current_answer_id = None
         if self.cursor >= len(self.plan):
             self.phase = "done"
             self._log({"event": "session_end", "t": t}, "Session complete")
@@ -300,12 +374,22 @@ class Session:
             answer_id = str(body.get("answer_id", ""))
             q_end = self.question_end_by_answer.get(answer_id)
             waited = body.get("waited_ms")
-            self._log({
+            # A second ack for the same answer means the volunteer link is open in a second window.
+            duplicate = answer_id in self.first_shown_s
+            if q_end and not duplicate:
+                self.first_shown_s[answer_id] = round(t - q_end, 3)
+            record = {
                 "event": "answer_shown", "t": t, "answer_id": answer_id,
                 # question end -> ack received: configured delay + one network round trip
                 "since_question_end_s": round(t - q_end, 3) if q_end else None,
                 "client_waited_ms": round(waited, 1) if isinstance(waited, (int, float)) else None,
-            }, f"Answer appeared on volunteer screen (+{t - q_end:.2f} s)" if q_end else "Answer appeared")
+            }
+            if duplicate:
+                record["duplicate"] = True
+                summary = "Answer appeared in a second volunteer window (the link is open twice)"
+            else:
+                summary = f"Answer appeared on volunteer screen (+{t - q_end:.2f} s)" if q_end else "Answer appeared"
+            self._log(record, summary)
 
     # ---- control-page state ------------------------------------------------------
 
@@ -322,6 +406,9 @@ class Session:
                          for i, p in enumerate(self.plan)],
                 "recording_marked": self.recording_marked,
                 "last_question_end_t": self.last_question_end_t,
+                # Seconds from question end until the volunteer's window first showed the answer;
+                # None while it is on its way, or when no assisted answer is open.
+                "current_answer_shown_s": self.first_shown_s.get(self.current_answer_id) if self.current_answer_id else None,
                 "volunteer_connected": time.time() - self.volunteer_last_seen < CONNECTED_WINDOW_S,
                 "volunteer_url": f"{self.public_url}/?t={self.token}" if self.public_url else None,
                 "local_volunteer_url": f"http://127.0.0.1:{VOLUNTEER_PORT}/?t={self.token}",

@@ -104,6 +104,7 @@
   .timer-block { display: flex; flex-direction: column; gap: 2px; }
   .timer-label { font-size: 12px; line-height: 16px; font-weight: 500; color: var(--text-2); }
   .timer { font: 500 36px/44px var(--mono); }
+  .shown-line { font-size: 13px; line-height: 18px; color: var(--text-2); }
   .hint { margin: 0; font-size: 15px; line-height: 22px; color: var(--text-2); }
   .hint kbd { margin: 0 2px; }
   .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
@@ -273,12 +274,13 @@ function renderMain() {
   const perRound = state.plan.filter(p => p.round === q.round).length;
   const meta = el('div', 'meta');
   meta.append(conditionTag(q.condition),
-    `Round ${q.round} · Set ${q.question_set} · Question ${q.question_num} of ${perRound} · ${cap(q.question_type)}`);
+    `Round ${q.round} · Set ${q.question_set} · Question ${q.position} of ${perRound} (Q${q.question_num}) · ${cap(q.question_type)}`);
   card.append(meta, el('div', 'question', q.question));
 
   if (answering) {
     const block = el('div', 'timer-block');
     block.append(el('div', 'timer-label', 'Since question ended'), el('div', 'timer', '0.0 s'));
+    if (q.condition === 'assisted') block.append(el('div', 'shown-line'));
     card.append(block);
   }
 
@@ -288,7 +290,9 @@ function renderMain() {
       ' when they finish. Marked Space at the wrong moment? Press it again to re-mark.');
   } else {
     hint.append('Read the question aloud, then press ', el('kbd', '', 'Space'), ' the moment you stop speaking.');
-    if (q.condition === 'assisted') hint.append(` The answer reaches the volunteer ${state.settings.answer_delay_s} s later.`);
+    if (q.condition === 'assisted') {
+      hint.append(` The answer reaches the volunteer ${q.delay_s} s later` + (q.difficulty ? ` (${q.difficulty} question).` : '.'));
+    }
   }
   card.append(hint);
 
@@ -344,6 +348,19 @@ function renderDone(card) {
   card.append(head, next, actions);
 }
 
+// Shows that the volunteer has the answer, so nothing needs re-sending. A test answer
+// would replace a real one, so T is only available before recording starts.
+function updateAnswerStatus() {
+  document.querySelectorAll('button[data-action="test"]').forEach(b => { b.disabled = state.recording_marked; });
+  const line = document.querySelector('.shown-line');
+  if (!line || !state.current) return;
+  const shown = state.current_answer_shown_s;
+  if (shown != null) line.textContent = `Answer shown on volunteer screen at +${shown.toFixed(2)} s`;
+  else if (Date.now() / 1000 - state.last_question_end_t > state.current.delay_s + 5) {
+    line.textContent = "Not confirmed yet: check that the volunteer's window is open.";
+  } else line.textContent = `Answer on its way (${state.current.delay_s} s delay)`;
+}
+
 function renderPlan() {
   const box = $('plan');
   box.replaceChildren();
@@ -382,6 +399,7 @@ function render() {
   // Rebuild only when the question changes, so an open <details> stays open.
   const key = [state.volunteer_id, state.phase, state.cursor].join(':');
   if (key !== mainKey) { mainKey = key; renderMain(); }
+  updateAnswerStatus();
   renderPlan();
   $('log').replaceChildren(...state.recent.map(line => el('li', '', line)));
 }

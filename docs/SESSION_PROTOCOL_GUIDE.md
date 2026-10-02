@@ -33,6 +33,8 @@ To prevent **ordering effects** (e.g., fatigue, relaxation, or getting accustome
 | `volunteer_01`, `03`, `05`, `07`, `09`, `11` | **Unassisted** (Set A) | **Assisted** (Set B) |
 | `volunteer_02`, `04`, `06`, `08`, `10`, `12` | **Assisted** (Set A) | **Unassisted** (Set B) |
 
+* **Question Order Within a Round:** The assistant tool asks the 4 questions in a balanced Latin square (Williams) order instead of Q1 to Q4. Volunteers of the same parity step through four orders (`01`, `03`, `05`, `07` get orders 1 to 4, then `09` starts again at order 1; likewise `02`, `04`, `06`, `08`). Across each group of four, every question is asked once in every position and directly follows every other question exactly once. Read the questions in the order the control panel shows; the order is also saved in `session_log.jsonl`.
+
 ---
 
 ## 3. Standardized Question Bank
