@@ -324,9 +324,10 @@ function renderDone(card) {
   head.append(el('h2', '', 'Session complete'),
     el('p', '', `${state.volunteer_id} · ${answered} of ${state.plan.length} questions answered`));
 
-  // The recording path is not known to the tool; this is the README's naming convention.
+  // The recording path is not known to the tool; this is the README's naming convention:
+  // save the OBS file into the volunteer's own raw folder, next to its session log.
   const num = parseInt(state.volunteer_id.replace('volunteer_', ''), 10);
-  const recording = `"D:\\recordings\\${state.volunteer_id}.mkv"`;
+  const recording = `"data\\raw\\${state.volunteer_id}\\${state.volunteer_id}.mp4"`;
   const commands = ['--dry-run', '--update-labels'].map(
     flag => `python assistant_tool/make_clips.py --volunteer ${num} --recording ${recording} ${flag}`);
 

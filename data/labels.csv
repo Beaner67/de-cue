@@ -1,9 +1,9 @@
-clip_id,volunteer_id,condition,question_num,question_type,label,video_path,audio_path
-v01_unassisted_q1,volunteer_01,unassisted,1,behavioral,0,external_data/real_life_trial/Real-life Deception Detection Dataset With Train Test/Test/trial_truth_055.mp4,
-v01_assisted_q1,volunteer_01,assisted,1,behavioral,1,external_data/real_life_trial/Real-life Deception Detection Dataset With Train Test/Test/trial_lie_056.mp4,
-v02_unassisted_q1,volunteer_02,unassisted,1,behavioral,0,external_data/real_life_trial/Real-life Deception Detection Dataset With Train Test/Test/trial_truth_056.mp4,
-v02_assisted_q1,volunteer_02,assisted,1,behavioral,1,external_data/real_life_trial/Real-life Deception Detection Dataset With Train Test/Test/trial_lie_057.mp4,
-v03_unassisted_q1,volunteer_03,unassisted,1,behavioral,0,external_data/real_life_trial/Real-life Deception Detection Dataset With Train Test/Test/trial_truth_057.mp4,
-v03_assisted_q1,volunteer_03,assisted,1,behavioral,1,external_data/real_life_trial/Real-life Deception Detection Dataset With Train Test/Test/trial_lie_058.mp4,
-v04_unassisted_q1,volunteer_04,unassisted,1,behavioral,0,external_data/real_life_trial/Real-life Deception Detection Dataset With Train Test/Test/trial_truth_058.mp4,
-v04_assisted_q1,volunteer_04,assisted,1,behavioral,1,external_data/real_life_trial/Real-life Deception Detection Dataset With Train Test/Test/trial_lie_059.mp4,
+clip_id,volunteer_id,condition,question_num,question_type,label,video_path,audio_path,question_end_time
+v02_assisted_q1,volunteer_02,assisted,1,behavioral,1,data/raw/volunteer_02/assisted_q1.mp4,,0.0
+v02_assisted_q2,volunteer_02,assisted,2,behavioral,1,data/raw/volunteer_02/assisted_q2.mp4,,0.0
+v02_assisted_q4,volunteer_02,assisted,4,conceptual,1,data/raw/volunteer_02/assisted_q4.mp4,,0.0
+v02_assisted_q3,volunteer_02,assisted,3,opinion,1,data/raw/volunteer_02/assisted_q3.mp4,,0.0
+v02_unassisted_q1,volunteer_02,unassisted,1,behavioral,0,data/raw/volunteer_02/unassisted_q1.mp4,,0.0
+v02_unassisted_q2,volunteer_02,unassisted,2,behavioral,0,data/raw/volunteer_02/unassisted_q2.mp4,,0.0
+v02_unassisted_q4,volunteer_02,unassisted,4,conceptual,0,data/raw/volunteer_02/unassisted_q4.mp4,,0.0
+v02_unassisted_q3,volunteer_02,unassisted,3,opinion,0,data/raw/volunteer_02/unassisted_q3.mp4,,0.0

@@ -92,9 +92,10 @@ Whisper and MediaPipe are slow on CPU; use `--permutations 0` and small
 - Stage 1 datasets live on an external drive whose letter changes.
   `EXTERNAL_DRIVE_ROOT` in `paths_config.py` is the only place to update;
   local copies in `external_data/` take priority over it.
-- `data/labels.csv` currently holds dry-run placeholder rows (Real-life Trial
-  clips) and has no `question_end_time` column, so `response_delay` is NaN.
-  Real volunteer rows should follow `data/labels_template.csv`.
+- `data/labels.csv` holds real volunteer rows written by
+  `assistant_tool/make_clips.py --update-labels`. Each clip starts at the
+  question end, so `question_end_time` is 0.0. The earlier Real-life Trial
+  placeholder rows were removed; don't mix them back in.
 - `baseline_utils.py` skips z-scoring when `models/baseline_stats.json` is
   missing, or when a group is flagged `domain_mismatch_warning`. Raw values
   are then used silently, which is expected and not a bug.

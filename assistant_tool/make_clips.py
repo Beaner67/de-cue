@@ -12,9 +12,9 @@ which would move the start of a clip by up to a few seconds and corrupt
 response_delay.
 
 Usage (from the project root):
-    python assistant_tool/make_clips.py --volunteer 1 --recording "D:/recordings/v01.mp4" --dry-run
-    python assistant_tool/make_clips.py --volunteer 1 --recording "D:/recordings/v01.mp4"
-    python assistant_tool/make_clips.py --volunteer 1 --recording "D:/recordings/v01.mp4" --update-labels
+    python assistant_tool/make_clips.py --volunteer 1 --recording "data/raw/volunteer_01/volunteer_01.mp4" --dry-run
+    python assistant_tool/make_clips.py --volunteer 1 --recording "data/raw/volunteer_01/volunteer_01.mp4"
+    python assistant_tool/make_clips.py --volunteer 1 --recording "data/raw/volunteer_01/volunteer_01.mp4" --update-labels
 
 --offset (seconds) shifts every cut. Use it if you find, for example from a
 clap at the start, that you pressed "Recording started" late (negative) or

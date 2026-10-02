@@ -114,11 +114,15 @@ Timings are saved to `data/raw/volunteer_XX/session_log.jsonl`. Like all of
 
 ## Cutting the clips
 
+Save the OBS recording into the volunteer's folder as
+`data/raw/volunteer_01/volunteer_01.mp4`, next to its session log. The
+Session complete card shows these commands with the right number filled in.
+
 ```powershell
 # Check the cuts first
-python assistant_tool/make_clips.py --volunteer 1 --recording "D:\recordings\volunteer_01.mkv" --dry-run
+python assistant_tool/make_clips.py --volunteer 1 --recording "data\raw\volunteer_01\volunteer_01.mp4" --dry-run
 # Cut the clips and add their rows to data/labels.csv
-python assistant_tool/make_clips.py --volunteer 1 --recording "D:\recordings\volunteer_01.mkv" --update-labels
+python assistant_tool/make_clips.py --volunteer 1 --recording "data\raw\volunteer_01\volunteer_01.mp4" --update-labels
 ```
 
 This writes `data/raw/volunteer_01/assisted_q1.mp4` etc., with
