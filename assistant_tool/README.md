@@ -77,7 +77,11 @@ python assistant_tool/server.py --tunnel
    window that stays above the call; they can place it beside or over the
    call window. The control panel shows "Volunteer page connected" once
    they've opened the link.
-3. Enter the volunteer number and click **Start session**. The order follows
+3. Check the volunteer number and click **Start session**. The box starts at
+   the first number with no session yet, so each volunteer gets their own
+   `data/raw/volunteer_XX/` folder; a number that already has a session shows
+   a warning, because starting would add a second session to that folder.
+   The order follows
    the counterbalancing table: odd numbers do unassisted first, even numbers
    do assisted first. Within each round the questions come in a balanced
    Latin square (Williams) order that depends on the volunteer number, so

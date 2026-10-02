@@ -83,6 +83,7 @@
   .order-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); font-size: 14px; line-height: 20px; }
   .order-row strong { font-weight: 600; }
   .order-row .muted { color: var(--text-2); }
+  .order-warn { margin: var(--space-2) var(--space-3) 10px; padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--warn-bg); color: var(--warn); font-size: 13px; line-height: 18px; }
 
   /* Session layout */
   #sessionView { flex: 1; display: flex; flex-direction: column; gap: var(--space-5); }
@@ -222,6 +223,8 @@ function act(action, extra = {}) {
   pump();
 }
 
+const NOT_RUNNING = 'The tool is not running. Start server.py again.';
+
 async function pump() {
   if (sending) return;
   sending = true;
@@ -240,7 +243,7 @@ async function pump() {
         render();
       } catch (e) {
         pending.length = 0;
-        $('error').textContent = 'The tool is not running. Start server.py again.';
+        $('error').textContent = NOT_RUNNING;
       }
     }
   } finally { sending = false; }
@@ -394,7 +397,7 @@ function render() {
   $('startView').hidden = !idle;
   $('sessionView').hidden = idle;
   syncFocus();
-  if (idle) return;
+  if (idle) { suggestVolunteerNum(); return; }
   $('recBanner').hidden = state.recording_marked;
   // Rebuild only when the question changes, so an open <details> stays open.
   const key = [state.volunteer_id, state.phase, state.cursor].join(':');
@@ -421,8 +424,25 @@ function orderHint() {
       el('span', 'muted', `Set ${set} · ${QUESTIONS_PER_ROUND} questions`));
     box.append(row);
   });
+  if (state && state.used_volunteer_nums && state.used_volunteer_nums.includes(n)) {
+    box.append(el('div', 'order-warn', `volunteer_${String(n).padStart(2, '0')} already has a session. `
+      + 'Starting adds a second session to the same folder.'));
+  }
 }
-$('vnum').oninput = orderHint;
+
+// Each new session defaults to the first volunteer number with no session yet, so
+// it gets its own folder. A number typed by hand is left alone.
+let vnumTouched = false;
+function suggestVolunteerNum() {
+  const used = state.used_volunteer_nums || [];
+  if (!vnumTouched) {
+    let n = 1;
+    while (used.includes(n)) n++;
+    if ($('vnum').value !== String(n)) $('vnum').value = n;
+  }
+  orderHint();
+}
+$('vnum').oninput = () => { vnumTouched = true; orderHint(); };
 orderHint();
 $('startBtn').onclick = () => act('start', { volunteer_num: parseInt($('vnum').value, 10) });
 $('recBtn').onclick = () => act('recording_start');
@@ -461,9 +481,11 @@ async function refresh() {
     try {
       const r = await fetch('/api/state', { cache: 'no-store', signal: ctrl.signal });
       const s = await r.json();
+      // A single failed poll shouldn't leave the "not running" warning up for good.
+      if ($('error').textContent === NOT_RUNNING) $('error').textContent = '';
       if (!sending && gen === actionGen) { state = s; render(); }
     } catch (e) {
-      if (e.name !== 'AbortError') $('error').textContent = 'The tool is not running. Start server.py again.';
+      if (e.name !== 'AbortError') $('error').textContent = NOT_RUNNING;
     } finally { clearTimeout(timer); }
   }
   setTimeout(refresh, 1000);

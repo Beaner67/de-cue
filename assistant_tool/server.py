@@ -157,6 +157,17 @@ def build_plan(volunteer_num: int, bank: dict) -> list[dict]:
     return plan
 
 
+def has_session(num: int) -> bool:
+    log_path = Path(VOLUNTEER_RAW_DIR) / f"volunteer_{num:02d}" / "session_log.jsonl"
+    return log_path.exists() and '"session_start"' in log_path.read_text(encoding="utf-8")
+
+
+def used_volunteer_nums() -> list[int]:
+    """Volunteer numbers whose folder already holds a session, so each new
+    session can default to a fresh folder."""
+    return [n for n in range(1, 100) if has_session(n)]
+
+
 class Session:
     def __init__(self, token: str):
         self.cond = threading.Condition()
@@ -303,6 +314,7 @@ class Session:
         folder = Path(VOLUNTEER_RAW_DIR) / f"volunteer_{num:02d}"
         folder.mkdir(parents=True, exist_ok=True)
         self.log_path = folder / "session_log.jsonl"
+        reused = has_session(num)
         self.cursor = 0
         self.phase = "waiting_question"
         self.recording_marked = False
@@ -315,6 +327,11 @@ class Session:
             "settings": self.settings,
             "plan": [{k: v for k, v in item.items() if k not in ("question", "answer")} for item in self.plan],
         }, f"Session started for volunteer_{num:02d}")
+        if reused:
+            note = (f"Warning: volunteer_{num:02d} already has a session. If this is a new "
+                    f"volunteer, start again with the next free number.")
+            print(note)
+            self.recent.append(note)
         # Odd volunteers get Set B assisted, even ones Set A, so unequal set means
         # would mix a delay difference into the counterbalancing.
         means = {name: sum(answer_delay(q, self.settings) for q in qs) / len(qs) for name, qs in bank["sets"].items()}
@@ -415,6 +432,8 @@ class Session:
                 "settings": self.settings,
                 "recent": list(reversed(self.recent)),
                 "log_path": str(self.log_path) if self.log_path else None,
+                # Only needed on the start screen; checking the folders on every poll mid-session is wasted disk reads.
+                "used_volunteer_nums": used_volunteer_nums() if self.phase == "idle" else None,
             }
 
 
