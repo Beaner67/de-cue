@@ -285,6 +285,7 @@ de-cue/
 │   ├── baseline_utils.py        # Stage 1 z-scoring helper
 │   ├── pretrain_calibration.py  # Stage 1: population reference stats
 │   ├── build_features.py        # Stage 2: master feature table
+│   ├── session_report.py        # per-session checks -> docs/VOLUNTEER_DATA_FINDINGS.md
 │   ├── modeling_utils.py        # shared CV, speaker centering, metrics, CIs, permutation test
 │   ├── train_model.py           # leave-speaker-out CV + final model export
 │   ├── evaluate_model.py        # feature-group ablation study

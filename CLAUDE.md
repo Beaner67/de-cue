@@ -63,6 +63,13 @@ Before labelling a session, check:
 4. **Only the volunteer's voice is recorded.** OBS should capture the
    browser's audio only (Application Audio Capture), not the researcher's mic.
 
+`make_clips.py` (unless `--no-report`) runs `src/session_report.py`, which
+does checks 1–3 automatically, caches `session_check.json` and
+`trial_features.csv` in the volunteer's folder, and regenerates the part of
+`docs/VOLUNTEER_DATA_FINDINGS.md` above its END marker. Below the marker is
+hand-written interpretation, which the script keeps. Check 4 still needs a
+listen.
+
 `data/labels.csv` now holds real volunteer rows; the courtroom stand-ins were
 removed with `--drop-standins`. `data/raw/volunteer_01` is a pilot test
 session and is deliberately not in labels.csv.

@@ -23,6 +23,45 @@ from paths_config import FEATURES_PATH, LABELS_PATH, resolve_project_path
 OUTPUT_PATH = FEATURES_PATH
 
 
+def extract_clip_features(row):
+    """Extracts all 12 features for one labels.csv row, or returns None if the
+    clip's video is missing. session_report.py calls this too, so the per-session
+    report and the training table always compute features the same way."""
+    clip_id = row["clip_id"]
+    video_path = str(resolve_project_path(row["video_path"]))
+    # If you extract audio separately (e.g. via ffmpeg) point this at the .wav instead
+    raw_audio = row.get("audio_path")
+    audio_path = str(resolve_project_path(str(raw_audio).strip())) if (pd.notna(raw_audio) and str(raw_audio).strip()) else video_path
+
+    if not resolve_project_path(video_path).exists():
+        print(f"[skip] {clip_id}: video not found at {video_path}")
+        return None
+
+    # Read question_end_time: None means "not available", 0.0 means "clip starts at answer"
+    question_end_time = None
+    raw_qet = row.get("question_end_time")
+    if pd.notna(raw_qet) and str(raw_qet).strip() != "":
+        question_end_time = float(raw_qet)
+
+    print(f"[processing] {clip_id}")
+
+    gaze_feats = extract_gaze_features(video_path)
+    latency_feats = extract_latency_features(audio_path, question_end_time=question_end_time)
+    linguistic_feats = extract_linguistic_features(audio_path)
+
+    return {
+        "clip_id": clip_id,
+        "volunteer_id": row["volunteer_id"],
+        "condition": row["condition"],
+        "question_type": row.get("question_type", ""),
+        **gaze_feats,
+        **latency_feats,
+        **{k: v for k, v in linguistic_feats.items() if k != "transcript"},
+        "transcript": linguistic_feats.get("transcript", ""),
+        "label": row["label"],
+    }
+
+
 def build_features():
     labels_df = pd.read_csv(LABELS_PATH)
 
@@ -30,49 +69,11 @@ def build_features():
     # clip to start exactly when the question ends, so for protocol clips the
     # correct value is 0.0. Leaving it out makes response_delay NaN for every
     # clip, and training then silently drops the feature.
-    has_question_end_time = "question_end_time" in labels_df.columns
-    if not has_question_end_time:
+    if "question_end_time" not in labels_df.columns:
         print("[Warning] labels.csv has no 'question_end_time' column — response_delay will be NaN for all clips.")
         print("          For clips trimmed per the session protocol (starting at question end), add the column with 0.0.")
 
-    rows = []
-
-    for _, row in labels_df.iterrows():
-        clip_id = row["clip_id"]
-        video_path = str(resolve_project_path(row["video_path"]))
-        # If you extract audio separately (e.g. via ffmpeg) point this at the .wav instead
-        raw_audio = row.get("audio_path")
-        audio_path = str(resolve_project_path(str(raw_audio).strip())) if (pd.notna(raw_audio) and str(raw_audio).strip()) else video_path
-
-        if not resolve_project_path(video_path).exists():
-            print(f"[skip] {clip_id}: video not found at {video_path}")
-            continue
-
-        # Read question_end_time: None means "not available", 0.0 means "clip starts at answer"
-        question_end_time = None
-        if has_question_end_time:
-            raw_qet = row.get("question_end_time")
-            if pd.notna(raw_qet) and str(raw_qet).strip() != "":
-                question_end_time = float(raw_qet)
-
-        print(f"[processing] {clip_id}")
-
-        gaze_feats = extract_gaze_features(video_path)
-        latency_feats = extract_latency_features(audio_path, question_end_time=question_end_time)
-        linguistic_feats = extract_linguistic_features(audio_path)
-
-        combined = {
-            "clip_id": clip_id,
-            "volunteer_id": row["volunteer_id"],
-            "condition": row["condition"],
-            "question_type": row.get("question_type", ""),
-            **gaze_feats,
-            **latency_feats,
-            **{k: v for k, v in linguistic_feats.items() if k != "transcript"},
-            "transcript": linguistic_feats.get("transcript", ""),
-            "label": row["label"],
-        }
-        rows.append(combined)
+    rows = [r for r in (extract_clip_features(row) for _, row in labels_df.iterrows()) if r is not None]
 
     features_df = pd.DataFrame(rows)
 

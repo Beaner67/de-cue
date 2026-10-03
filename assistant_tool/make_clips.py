@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -114,6 +115,21 @@ def update_labels(rows: list[dict], drop_standins: bool):
           + (f", {len(standins)} stand-in rows removed" if drop_standins and standins else ""))
 
 
+def run_report(volunteer: int):
+    """Updates docs/VOLUNTEER_DATA_FINDINGS.md with this session. The report
+    needs the ML packages, so it runs in the project venv rather than in
+    whatever Python started this stdlib-only script."""
+    venv_python = PROJECT_ROOT / "venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    report = PROJECT_ROOT / "src" / "session_report.py"
+    manual = f"venv\\Scripts\\python.exe src\\session_report.py --volunteer {volunteer}"
+    if not venv_python.exists():
+        print(f"\n[Note] Project venv not found, so the findings report wasn't updated. Run:  {manual}")
+        return
+    print("\nUpdating the findings report (feature extraction takes a few minutes on CPU)...", flush=True)
+    if subprocess.run([str(venv_python), str(report), "--volunteer", str(volunteer)], cwd=PROJECT_ROOT).returncode:
+        print(f"[Warning] The findings report failed; the clips are fine. Rerun it with:  {manual}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Cut a session recording into per-question clips.")
     parser.add_argument("--volunteer", type=int, required=True, help="volunteer number, e.g. 1 for volunteer_01")
@@ -124,6 +140,8 @@ def main():
     parser.add_argument("--update-labels", action="store_true", help="merge the rows into data/labels.csv")
     parser.add_argument("--drop-standins", action="store_true",
                         help="with --update-labels: remove the courtroom stand-in rows from labels.csv")
+    parser.add_argument("--no-report", action="store_true",
+                        help="don't update docs/VOLUNTEER_DATA_FINDINGS.md after cutting")
     args = parser.parse_args()
 
     volunteer_id = f"volunteer_{args.volunteer:02d}"
@@ -184,6 +202,9 @@ def main():
         update_labels(rows, args.drop_standins)
     else:
         print("Add them to data/labels.csv with --update-labels, or copy them in by hand.")
+    # Runs even when clips are missing: the report flags the gaps.
+    if not args.no_report:
+        run_report(args.volunteer)
     if problems or missing:
         sys.exit(1)
 

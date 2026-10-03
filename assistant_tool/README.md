@@ -126,7 +126,11 @@ python assistant_tool/make_clips.py --volunteer 1 --recording "data\raw\voluntee
 ```
 
 This writes `data/raw/volunteer_01/assisted_q1.mp4` etc., with
-`question_end_time = 0.0` for every clip. The first time, add
+`question_end_time = 0.0` for every clip. It then runs
+`src/session_report.py` in the project venv, which checks the session,
+extracts this volunteer's features into `trial_features.csv`, and regenerates
+Sections 1–4 of `docs/VOLUNTEER_DATA_FINDINGS.md`. This takes a few minutes;
+pass `--no-report` to skip it. The first time, add
 `--drop-standins` to remove the 8 courtroom stand-in rows from `labels.csv`.
 The script refuses to mix them with real volunteer data.
 
