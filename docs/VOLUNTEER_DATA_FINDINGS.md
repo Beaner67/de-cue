@@ -2,7 +2,7 @@
 
 **Study:** De-Cue: Detecting Covert Real-Time AI Assistance in Video Interviews<br>
 **Data covered:** 16 volunteer sessions (2026-10-02 to 2026-10-17), 128 clips<br>
-**Last updated:** 2026-10-17 15:03, by `src/session_report.py`
+**Last updated:** 2026-10-17 21:47, by `src/session_report.py`
 
 > Sections 1–4 are regenerated after every session (`make_clips.py` runs the report), so edits to them are overwritten. Write interpretation in the sections after the end marker.
 
@@ -39,10 +39,10 @@
 | V15 | 2026-10-17 | automatic | Unassisted → Assisted | 8 | yes | — |
 | V16 | 2026-10-17 | automatic | Assisted → Unassisted | 8 | yes | — |
 
-- **Design:** within-subjects. Each volunteer answers 4 questions unassisted (Set A) and 4 with the Wizard-of-Oz assistant (Set B). Each round has 2 behavioural, 1 opinion and 1 conceptual question.
+- **Design:** within-subjects. Each volunteer answers 4 questions unassisted and 4 with the Wizard-of-Oz assistant. The first round always uses question Set A and the second Set B, so the sets swap conditions between odd and even volunteers. Each round has 2 behavioural, 1 opinion and 1 conceptual question.
 - **Counterbalancing:** odd-numbered volunteers do the unassisted round first and even-numbered ones the assisted round first. Question order within a round follows a Williams design per volunteer pair.
 - **Clips** start at the end of the question and end at the end of the answer.
-- **Protocol:** *live* = the researcher read the questions over a video call, recorded with OBS; *automatic* = the web app presented the questions (on-screen text read by the browser's voice) and the browser recorded the webcam. Each volunteer did both rounds under one protocol, so the within-speaker comparisons are not mixed, but gaze values differ in scale between protocols (camera and resolution).
+- **Protocol:** *live* = the researcher read the questions over a video call, recorded with OBS; *automatic* = the web app presented the questions (on-screen text played from pre-recorded audio) and the browser recorded the webcam. Each volunteer did both rounds under one protocol, so the within-speaker comparisons are not mixed, but gaze values differ in scale between protocols (camera and resolution).
 
 ---
 
@@ -233,51 +233,100 @@ U = unassisted, A = assisted.
 
 <!-- END AUTO-GENERATED: everything below this line is hand-written and kept -->
 
-> Sections 5–7 are hand-written and were last revised after volunteer 04. Numbers quoted here may be out of date after new sessions; check them against Sections 1–4.
+> Sections 5–7 are hand-written. Last revised 2026-10-17, after volunteer 16. Sections 1–4 cover every recorded session, including the V01 pilot and the excluded V08, so their counts differ from this analysis. It uses the 14 analysed volunteers (V02–V07 and V09–V16, 111 clips). Feature values come from `data/features.csv`, built from scratch in one `build_features.py` run on 2026-10-17.
 
 ## 5. Interpretation
 
-### 5.1 Consistent signals
+### 5.1 Who is analysed
 
-- **Gaze:** with the assistant, volunteers held a steadier gaze closer to the camera and blinked less. This fits reading text: reading suppresses blinking and keeps the eyes in a narrow area. For this study, the assistant window sits close to the camera. Because the effect appeared in both round orders, it is not explained by settling in over the session.
-- **Fluency:** assisted speech had fewer fillers, a faster speaking rate and more varied vocabulary. This fits reading out a prepared, well-formed answer instead of composing one.
+- **V01** is the pilot session and is not in `labels.csv`.
+- **V08 is excluded entirely** (`data/volunteer_exclusions.csv`). They answered the assisted round from their own knowledge: 0% of the suggestions' three-word phrases reused (Section 5.2). No run that includes V08 is reported.
+- **V11 is kept.** During their first round the researcher explained the page's controls. That speech falls between question plays, outside the clips. V11 replayed unassisted q2 four times and q1 three times and practised before the final take, which is what those two clips contain.
+- **V14 assisted q3, V15 unassisted q1 and V16 assisted q4** have speech between repeated plays, so the volunteer probably started answering and then restarted. The clips hold the final attempt and are kept.
+- **Gaze is excluded for `v06_unassisted_q4`** (frozen for the whole clip), so training drops that clip.
+- **Round order is balanced:** 7 volunteers did the assisted round first and 7 the unassisted round first. Because the first round always uses question Set A, question sets are balanced across conditions too.
 
-### 5.2 Response delay
+### 5.2 Did volunteers use the assistant?
 
-Response delay went in opposite directions for the two volunteer pairs:
+Each answer is compared with the suggested answer for that question: the figure is the share of the suggestion's three-word phrases spoken word for word. Unassisted answers are compared with the suggestion for the same question, which they never saw.
 
-- **01 and 02** answered faster when assisted (4.6 → 3.5 s and 4.9 → 2.3 s). Their unassisted answers began late, which suggests they spent time thinking before speaking.
-- **03 and 04** answered slower when assisted (2.2 → 3.1 s and 1.5 → 2.2 s). They started unassisted answers quickly and seem to have waited for the assistant's text to appear.
+- **Assisted answers:** per-volunteer means of 30–89%. The lowest single answer is 18% (V11).
+- **Unassisted answers:** mean 0.3%, highest 4.1%.
+- **All 56 assisted clips are above every unassisted clip.**
+- V09, V11 and V13 mixed the suggestion with their own words (means 30–44%). V06 and V07 read it almost word for word (80–89%).
 
-Each pair contains one volunteer from each round order, so round order does not explain the split. Two other explanations remain. The pairs had different question orders, and the volunteers may have differed in strategy, for example starting to speak at once versus waiting to read. The assistant's own delay of 0.7–3.1 s (Section 3.3) also puts a lower limit on how quickly an assisted volunteer can start reading. On this data, `response_delay` cannot be relied on as a cue.
+### 5.3 Consistent signals
 
-### 5.3 Saccade rate of volunteer 02
+Unassisted → assisted, as the mean of per-volunteer means. Pause and language features are in real units (converted back from the Stage 1 z-scores); gaze features are raw. *dz* is the mean within-person change divided by its standard deviation.
 
-Volunteer 02's saccade rate (3.4 unassisted and 4.6 assisted) is 3–6× that of the other volunteers (0.2–1.1). They are also the only volunteer whose saccade rate rose with the assistant. This is consistent with the known limitation of `saccade_rate` on webcam clips, which may be inflated for people wearing glasses because `SACCADE_VELOCITY_THRESHOLD` has not been validated. It should be checked whether volunteer 02 wore glasses. Until then, saccade findings should be reported with caution.
+| Feature | Unassisted → assisted | Same direction | Sign test p | dz | Exceptions |
+| --- | --- | --- | --- | --- | --- |
+| Word variety (type-token ratio) | 0.61 → 0.75 ↑ | 14/14 | < 0.001 | +1.30 | — |
+| Words per sentence | 22.7 → 13.3 ↓ | 13/14 | 0.002 | −1.42 | V11 |
+| Gaze steadiness | 834 → 1,811 ↑ | 13/14 | 0.002 | +0.69 | V15 |
+| Looking away from the camera | 0.039 → 0.024 ↓ | 13/14 | 0.002 | −0.96 | V15 |
+| Blinks per minute | 51 → 28 ↓ | 13/14 | 0.002 | −1.20 | V16 |
+| Response delay (s) | 1.9 → 3.3 ↑ | 12/14 | 0.013 | +0.83 | V02, V13 |
+| Fillers per 100 words | 3.2 → 1.7 ↓ | 11/14 | 0.057 | −0.93 | V10, V12, V14 |
 
-### 5.4 Pause features
+This is the pattern expected from reading off a screen: a steadier gaze, suppressed blinking, short well-formed sentences with more varied words, and fewer fillers. Answer length barely differs (median 78 assisted vs 83 unassisted words), so the rise in word variety is not mainly a length effect.
 
-The pause features (rate, mean length and variance) mostly fell with assistance but were not consistent. Pause variance in particular is dominated by single answers: volunteer 01 dropped by 6.5 and volunteer 02 rose by 8.5. These features are likely to be noisy at this sample size.
+### 5.4 Response delay
 
-### 5.5 Sentence complexity
+This replaces the earlier note about a split between volunteers 01–02 and 03–04. With 14 volunteers, 12 started later with the assistant (1.9 → 3.3 s). The assistant's answer appears 0.5–2.0 s after the question by design, and volunteers seem to wait for it and read a little before speaking.
 
-Sentence complexity fell with assistance for three volunteers and rose for the pilot volunteer (01). This runs against the expectation that assisted answers read from scripted text would be more complex. It may reflect how the measure handles short, list-like unassisted answers.
+### 5.5 Gaze depends on the setup
+
+Mean within-person effect size of the gaze change, by session type:
+
+| Group | Gaze steadiness | Looking away | Blinks |
+| --- | --- | --- | --- |
+| Researcher-run video calls (V02–V07) | 3.5 | 4.5 | 3.2 |
+| Automatic browser sessions (V09–V12) | 1.3 | 2.3 | 2.4 |
+| Automatic browser sessions (V13–V16) | 0.1 | 0.6 | 1.9 |
+
+In a video call, a volunteer answering alone has nothing to read, so their eyes wander; reading the assistant steadies them. On the automatic page the question stays on screen in both rounds, so the contrast is smaller, and for V15 it reversed. This explanation has not been checked against the video. In the model, gaze alone reaches AUC 0.878, and the combined model reaches 0.993 on video-call clips against 0.933 on browser clips.
+
+### 5.6 Mixed features
+
+Speaking rate (8/14), pause rate (8/14), average pause length and pause variance (10/14) and saccade rate (11/14) show no reliable direction. Pauses look like an individual speaking habit. Saccade rate is unvalidated on webcam video (the "glasses?" flags in Section 1); the detector's AUC is unchanged without it.
+
+### 5.7 Detector results
+
+Logistic regression on speaker-centred features, leave-one-speaker-out cross-validation, pooled out-of-fold predictions. 95% confidence intervals come from a speaker bootstrap; p from 1000 within-speaker label shuffles (0.001 is the smallest possible value).
+
+| Model | ROC-AUC [95% CI] | Balanced accuracy | p |
+| --- | --- | --- | --- |
+| **All 12 features** | **0.961** [0.927, 0.986] | **0.892** | ≤ 0.001 |
+| Gaze only | 0.878 [0.737, 0.974] | 0.802 | ≤ 0.001 |
+| Language only | 0.905 [0.819, 0.963] | 0.829 | ≤ 0.001 |
+| Timing only | 0.787 [0.664, 0.888] | 0.775 | ≤ 0.001 |
+| All features, no speaker centering | 0.949 [0.906, 0.981] | 0.838 | ≤ 0.001 |
+| XGBoost, all features | 0.907 [0.819, 0.975] | 0.811 | ≤ 0.001 |
+| Majority-class baseline | 0.500 | 0.492 | — |
+
+Checks: without V11, AUC 0.957; without `saccade_rate`, 0.965; without word variety and sentence length, 0.907. Per volunteer, 6–8 of 8 clips are classified correctly; V15 and V16 are lowest at 6/8.
 
 ---
 
 ## 6. Limitations
 
-- **Sample size:** with four speakers and 16 paired answers, no significance testing is meaningful yet. The project's planned evaluation (leave-speaker-out cross-validation, speaker-bootstrap confidence intervals and a within-speaker permutation test) needs more volunteers.
-- **Pilot data:** volunteer 01 is a pilot session and is excluded from `data/labels.csv`. It is included here for comparison only. Without it, the six consistent features still agree across volunteers 02–04.
-- **Feature scales:** gaze features are raw, uncalibrated values because the gaze baseline is flagged as domain-mismatched. They can be compared within a speaker but not directly across speakers.
-- **Answer length:** assisted answers were generally longer than unassisted ones, so rate-based features may partly reflect answer length.
-- **Assistant timing:** the delay before the assistant's answer appears, plus its 0.2–1.1 s overhead, affects latency features in the assisted condition.
+- **Sample size:** 14 speakers. Speaker-bootstrap confidence intervals are still optimistic at this size, and every p-value is at the floor of the permutation test, so report p ≤ 0.001.
+- **Scripted suggestions:** the suggested answers are short (50–80 words) and written in short sentences, so word variety and sentence length partly measure reading this particular script. Without those two features the AUC drops to 0.907. A real AI copilot that writes long paragraphs may look different.
+- **Gaze depends on the setup** (Section 5.5).
+- **Per-speaker centering** needs several answers from the same candidate, with both conditions present. Someone who used an assistant on every answer would be centred away. Without centering the AUC is 0.949.
+- **Two protocols and a changing briefing:** 6 researcher-run video calls (V02–V07) and 8 automatic browser sessions (V09–V16). The briefing changed from V09's redone session onward. From V12 the instructions could be skipped after 5 s, and V12–V16 skipped every briefing (logged as `instructions_skipped`).
+- **Wizard-of-Oz:** the assistant showed fixed, pre-written answers after set delays, not a live language model.
+- **Feature scales:** gaze features are raw because the gaze baseline is domain-mismatched. They compare within a speaker, not across speakers.
+- **Transcription:** Whisper's fallback decoding is not seeded. Rebuilding the table transcribed 1 of 72 earlier clips slightly differently (one filler word).
 
 ---
 
 ## 7. Next Steps
 
-1. Run `python src/build_features.py` to write `data/features.csv` for the volunteers in `labels.csv` (02–04).
-2. Check whether volunteer 02 wore glasses, and validate `SACCADE_VELOCITY_THRESHOLD` before relying on `saccade_rate`.
-3. Collect the remaining volunteers (target 10–12) before training and evaluating the model with `train_model.py`.
-4. Review the response-delay split as more volunteers come in, and decide whether it reflects individual strategy or the assistant's timing.
+1. No further data collection is needed for the thesis.
+2. Report only runs without V08, and justify the exclusion with the assistant-use check (Section 5.2), not the model's score.
+3. Don't quote volunteers' answers: the consent form covers numerical data only.
+4. After grading, delete `data/raw/` and drop the `transcript` column from `data/features.csv` (see the README).
+5. Optional: validate `SACCADE_VELOCITY_THRESHOLD`, and seed Whisper's decoding (this needs Stage 1 rerun).
+6. The web dashboard must reproduce per-candidate centering (see `models/detector_meta.json`).

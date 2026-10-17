@@ -401,14 +401,16 @@ def build_report(volunteers):
           "; ".join(flags[v["id"]]) or "—"] for v in volunteers]))
     out += [
         "",
-        "- **Design:** within-subjects. Each volunteer answers 4 questions unassisted (Set A) and 4 with the "
-        "Wizard-of-Oz assistant (Set B). Each round has 2 behavioural, 1 opinion and 1 conceptual question.",
+        "- **Design:** within-subjects. Each volunteer answers 4 questions unassisted and 4 with the "
+        "Wizard-of-Oz assistant. The first round always uses question Set A and the second Set B, so the sets "
+        "swap conditions between odd and even volunteers. Each round has 2 behavioural, 1 opinion and 1 "
+        "conceptual question.",
         "- **Counterbalancing:** odd-numbered volunteers do the unassisted round first and even-numbered ones "
         "the assisted round first. Question order within a round follows a Williams design per volunteer pair.",
         "- **Clips** start at the end of the question and end at the end of the answer.",
         "- **Protocol:** *live* = the researcher read the questions over a video call, recorded with OBS; "
-        "*automatic* = the web app presented the questions (on-screen text read by the browser's voice) and the "
-        "browser recorded the webcam. Each volunteer did both rounds under one protocol, so the within-speaker "
+        "*automatic* = the web app presented the questions (on-screen text played from pre-recorded audio) and "
+        "the browser recorded the webcam. Each volunteer did both rounds under one protocol, so the within-speaker "
         "comparisons are not mixed, but gaze values differ in scale between protocols (camera and resolution).",
         "", "---", "",
     ]

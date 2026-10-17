@@ -6,11 +6,11 @@ detects the assistance from behaviour: **where the eyes go** (gaze),
 **when and how the candidate speaks** (latency), and **what the speech
 sounds like** (linguistic features).
 
-> Final year project. This repository covers **Subsystem B (data pipeline)**
-> and **Subsystem C (detector model)** from Section 4 of the project proposal.
-> The assistant/overlay tool (Subsystem A) and the web dashboard are separate
-> components. Background, related work, ethics and timeline are in the
-> proposal document.
+> Final year project. This repository covers **Subsystem A (assistant tool)**,
+> in `assistant_tool/` and `automated_interview/`, **Subsystem B (data
+> pipeline)** and **Subsystem C (detector model)** from Section 4 of the
+> project proposal. The web dashboard is a separate component. Background,
+> related work, ethics and timeline are in the proposal document.
 
 ---
 
@@ -288,13 +288,17 @@ de-cue/
 ├── data/
 │   ├── raw/                     # volunteer recordings (gitignored, never commit)
 │   ├── labels.csv               # ground truth for each clip
-│   └── labels_template.csv      # example rows in the expected format
+│   ├── labels_template.csv      # example rows in the expected format
+│   ├── volunteer_exclusions.csv # whole volunteers left out, with the reason
+│   └── gaze_exclusions.csv      # clips whose gaze features are invalid (frozen video)
 ├── external_data/               # Stage 1 datasets (gitignored)
 ├── docs/
 │   ├── VOLUNTEER_CONSENT_FORM.md
 │   ├── SESSION_PROTOCOL_GUIDE.md          # technical session protocol
-│   └── SESSION_PROTOCOL_GUIDE_GENERAL.md  # non-technical session protocol
+│   ├── SESSION_PROTOCOL_GUIDE_GENERAL.md  # non-technical session protocol
+│   └── VOLUNTEER_DATA_FINDINGS.md         # per-session checks (generated) + interpretation
 ├── models/                      # generated model artifacts (gitignored)
+├── assistant_tool/              # Subsystem A: Wizard-of-Oz assistant for researcher-run sessions; see assistant_tool/README.md
 ├── automated_interview/         # automatic sessions: remote_session.py + web app; see automated_interview/web/README.md
 ├── src/
 │   ├── paths_config.py          # all paths; the only file to edit when the drive letter changes
@@ -337,9 +341,9 @@ de-cue/
 - [x] Stage 1 calibration: leakage-free and randomly sampled
 - [x] Modelling: speaker-centred features, logreg + regularized XGBoost, pooled OOF metrics, bootstrap CIs, permutation test
 - [x] Volunteer protocol & documentation ([consent form](docs/VOLUNTEER_CONSENT_FORM.md), [technical protocol](docs/SESSION_PROTOCOL_GUIDE.md), [general protocol](docs/SESSION_PROTOCOL_GUIDE_GENERAL.md))
-- [ ] Collect real volunteer data (target 5–7, ideally 10–12 volunteers)
-- [ ] Recheck the gaze saccade threshold (`SACCADE_VELOCITY_THRESHOLD = 1.5`) on real webcam clips
-- [ ] Subsystem A: assistant/overlay tool (separate component)
+- [x] Collect real volunteer data: 15 volunteers recorded (V02–V16, plus the V01 pilot), 14 analysed; V08 is excluded (see `data/volunteer_exclusions.csv`)
+- [x] Subsystem A: assistant tool for researcher-run sessions (`assistant_tool/`) and automatic browser sessions (`automated_interview/`)
+- [ ] Recheck the gaze saccade threshold (`SACCADE_VELOCITY_THRESHOLD = 1.5`) on real webcam clips. Still unvalidated, but the results don't depend on it: dropping `saccade_rate` leaves the AUC unchanged.
 - [ ] Web dashboard (separate component); must apply per-candidate centering (see `models/detector_meta.json`)
 
 ---
@@ -351,5 +355,13 @@ de-cue/
   protocol.
 - **Never commit real participant data.** `data/raw/`, generated feature
   tables and model files are gitignored for this reason.
+- **Transcripts are not numerical data.** The consent form covers anonymized
+  numerical features only, so don't quote volunteers' answers in the thesis,
+  and keep documents that do (e.g. `docs/ASSISTED_VS_UNASSISTED_COMPARISON.md`)
+  out of git.
+- **After grading:** delete `data/raw/` (recordings, session logs and the
+  per-session `trial_features.csv`) as the consent form promises, and drop the
+  `transcript` column from `data/features.csv`, so only numerical features
+  remain.
 - The detector outputs a probability, not proof. It is a research prototype
   and must not be used as the only basis for any hiring decision.
