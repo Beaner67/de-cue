@@ -18,6 +18,8 @@ If you agree to take part in this study, you will participate in a mock remote v
 3. **Round 2 (~8–10 mins):** You will answer a second set of questions under the alternative condition.
 4. **Debriefing (~3 mins):** Short feedback and questions about your experience.
 
+**Interview rule:** Treat the mock interview exactly like a real interview. No outside help of any kind is allowed: no notes, phones, web searches, other AI tools, or other people helping you. The only help you may use is the AI assistant provided by the researcher, and only in the round where it is switched on.
+
 ### 3. What Data Will Be Collected
 * **Webcam Video Recording:** Used to extract head posture and eye gaze metrics (e.g., pupil fixation stability, saccadic jump rate, blink rate) via automated computer vision models (MediaPipe FaceMesh).
 * **Audio Recording:** Used to compute speech timing metrics (response delay, pauses via voice activity detection) and linguistic fluency metrics (filler word rates, speaking rate via Whisper transcription).
@@ -40,6 +42,7 @@ Please review each statement and check the boxes to indicate your agreement:
 
 - [ ] **I confirm** that I have read and understood the Participant Information Sheet for this study and have had the opportunity to ask questions.
 - [ ] **I understand** that my participation is voluntary and that I am free to withdraw at any time without giving a reason.
+- [ ] **I agree** to treat the mock interview as a real interview and not to use any outside help, other than the AI assistant provided in the assisted round.
 - [ ] **I agree** to have my video and audio recorded during the mock interview session for automated feature extraction purposes.
 - [ ] **I understand** that raw video/audio recordings will be stored securely, kept strictly confidential, and anonymized under a participant ID.
 - [ ] **I understand** that anonymized numerical data derived from my recording will be used in a thesis report and related academic presentations.

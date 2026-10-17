@@ -42,6 +42,12 @@ thesis project, so correct methodology matters more than raw performance.
 5. **Report pooled out-of-fold metrics**, with speaker-bootstrap CIs and the
    within-speaker permutation test. Don't replace them with per-fold
    averages.
+6. **Exclusions are by hand and need a reason.** Whole volunteers go in
+   `data/volunteer_exclusions.csv`, single clips with invalid gaze in
+   `data/gaze_exclusions.csv`. Never add an exclusion because a volunteer or
+   clip scored badly, and never delete rows from `labels.csv` instead. Excluded
+   volunteers are dropped in `load_feature_table()`; `--include-excluded`
+   gives the sensitivity run.
 
 ## Code conventions
 

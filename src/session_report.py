@@ -33,7 +33,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from modeling_utils import FEATURE_COLUMNS, FEATURE_GROUPS
+from modeling_utils import FEATURE_COLUMNS, FEATURE_GROUPS, apply_gaze_exclusions, load_gaze_exclusions
 from paths_config import BASELINE_STATS_PATH, FINDINGS_REPORT_PATH, LABELS_PATH, VOLUNTEER_RAW_DIR
 
 END_MARKER = "<!-- END AUTO-GENERATED: everything below this line is hand-written and kept -->"
@@ -46,6 +46,19 @@ ALIGN_TOLERANCE_S = (-2.0, 30.0)
 # saccade_rate is unvalidated on webcam clips and may be inflated for people
 # wearing glasses, so a volunteer this far above the others' median is flagged.
 SACCADE_OUTLIER_FACTOR = 2.0
+# Remote volunteers' call video sometimes freezes while the audio carries on.
+# Frozen frames give MediaPipe identical landmarks, which corrupts the gaze
+# features, so freezes are detected on the full recording and reported per
+# clip. Frames are sampled at 10 fps and downscaled first to keep this fast;
+# freezes shorter than FREEZE_MIN_S are not reported.
+FREEZE_NOISE = 0.003
+FREEZE_MIN_S = 3.0
+# Short freezes barely move a clip's gaze averages; only clips at least this
+# share frozen are flagged for review (all are listed in Section 3.6).
+FREEZE_FLAG_SHARE = 0.25
+# Same tail padding make_clips.py adds, so clip windows match the cut clips
+# (assumes the clips were cut without --offset).
+CLIP_END_PAD_S = 0.5
 
 GROUP_LABELS = {"gaze_only": "Gaze", "latency_only": "Latency", "linguistic_only": "Linguistic"}
 # Words for "higher" / "lower" when assisted, where plain direction is unclear.
@@ -90,6 +103,20 @@ def _probe_recording(path):
     return out
 
 
+def _frozen_intervals(path, duration_s):
+    """[[start, end], ...] in seconds of the recording, or None if it can't be checked."""
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg or not path.exists():
+        return None
+    r = subprocess.run([ffmpeg, "-hide_banner", "-i", str(path), "-map", "0:v:0",
+                        "-vf", f"fps=10,scale=480:-1,freezedetect=n={FREEZE_NOISE}:d={FREEZE_MIN_S}",
+                        "-f", "null", "-"], capture_output=True, text=True, errors="replace")
+    starts = [float(x) for x in re.findall(r"freeze_start: ([\d.]+)", r.stderr)]
+    ends = [float(x) for x in re.findall(r"freeze_end: ([\d.]+)", r.stderr)]
+    # A freeze still running when the recording ends has no freeze_end.
+    return [[s, ends[i] if i < len(ends) else (duration_s or s)] for i, s in enumerate(starts)]
+
+
 def check_session(folder):
     records = _latest_session(folder / "session_log.jsonl")
     start = next(r for r in records if r["event"] == "session_start")
@@ -118,19 +145,33 @@ def check_session(folder):
         answers.append({"condition": p["condition"], "question_num": p["question_num"],
                         "difficulty": p.get("difficulty"),
                         "answer_s": answer_end[key]["t"] - question_end[key]["t"],
-                        "shown_after_s": s["since_question_end_s"] if s else None})
+                        "shown_after_s": s["since_question_end_s"] if s else None,
+                        "clip_start_s": question_end[key]["t"] - rec_start[-1] if rec_start else None,
+                        "clip_end_s": answer_end[key]["t"] - rec_start[-1] + CLIP_END_PAD_S if rec_start else None})
+
+    recording = _probe_recording(folder / f"{folder.name}.mp4")
+    frozen = _frozen_intervals(folder / f"{folder.name}.mp4", recording["duration_s"])
+    for a in answers:
+        if frozen is None or a["clip_start_s"] is None:
+            a["frozen_s"] = None
+            continue
+        a["frozen_s"] = sum(max(0.0, min(e, a["clip_end_s"]) - max(s, a["clip_start_s"])) for s, e in frozen)
 
     return {
         "session_id": start["session_id"],
         "date": start["t_iso"][:10],
         "first_condition": plan[0]["condition"],
+        # Sessions from the web app (remote_session.py) log "automatic"; the
+        # researcher-led tool (server.py) logs no protocol.
+        "protocol": start.get("protocol", "live"),
         "planned": len(plan),
         "missing": missing,
         "back_presses": sum(r["event"] == "back" for r in records),
         "log_span_s": session_end[-1] - rec_start[-1] if rec_start and session_end else None,
         "delay_by_difficulty": start.get("settings", {}).get("delay_by_difficulty", {}),
         "answers": answers,
-        **_probe_recording(folder / f"{folder.name}.mp4"),
+        "frozen_intervals": frozen,
+        **recording,
     }
 
 
@@ -154,10 +195,12 @@ def load_volunteers(selected, refresh, extract):
         redo = refresh or folder.name in selected
 
         check_path = folder / "session_check.json"
-        if redo or not check_path.exists():
+        check = json.loads(check_path.read_text(encoding="utf-8")) if check_path.exists() else None
+        # Checks cached before freeze detection existed are redone once.
+        if redo or check is None or "frozen_intervals" not in check:
             print(f"[check] {folder.name}")
-            check_path.write_text(json.dumps(check_session(folder), indent=2), encoding="utf-8")
-        check = json.loads(check_path.read_text(encoding="utf-8"))
+            check = check_session(folder)
+            check_path.write_text(json.dumps(check, indent=2), encoding="utf-8")
 
         feats_path = folder / "trial_features.csv"
         feats = None
@@ -166,6 +209,10 @@ def load_volunteers(selected, refresh, extract):
             feats = extract_volunteer_features(folder)
         elif feats_path.exists():
             feats = pd.read_csv(feats_path)
+        # The cache keeps the extracted values; exclusions apply on top, so
+        # editing data/gaze_exclusions.csv needs no re-extraction.
+        if feats is not None:
+            feats = apply_gaze_exclusions(feats)
         volunteers.append({"id": folder.name, "short": "V" + folder.name[-2:], "check": check, "features": feats})
     return volunteers
 
@@ -186,6 +233,15 @@ def _table(header, rows):
 
 def _round_order(check):
     return "Unassisted → Assisted" if check["first_condition"] == "unassisted" else "Assisted → Unassisted"
+
+
+def _clip_id(v, answer):
+    return f"v{v['id'][-2:]}_{answer['condition']}_q{answer['question_num']}"
+
+
+def _frozen_share(answer):
+    length = answer["clip_end_s"] - answer["clip_start_s"]
+    return answer["frozen_s"] / length if length > 0 else 0.0
 
 
 def _feature_group(feature):
@@ -256,10 +312,21 @@ def volunteer_flags(v, res, in_labels):
     if c["back_presses"]:
         n = c["back_presses"]
         flags.append(f"{n} Back press{'es' if n != 1 else ''}; last marks used")
+    excluded = load_gaze_exclusions()
+    frozen = [(a, _clip_id(v, a)) for a in c["answers"] if (a.get("frozen_s") or 0) >= FREEZE_MIN_S]
+    unlisted = [f"{cid[4:]} {_frozen_share(a):.0%}" for a, cid in frozen
+                if cid not in excluded and _frozen_share(a) >= FREEZE_FLAG_SHARE]
+    if unlisted:
+        flags.append("video frozen in " + ", ".join(unlisted) + " (review; gaze may be invalid)")
+    listed = sorted(cid[4:] for cid in excluded if cid.startswith(f"v{v['id'][-2:]}_"))
+    if listed:
+        flags.append("gaze excluded: " + ", ".join(listed))
     if v["features"] is None:
         flags.append("features not extracted")
     else:
-        nan = int(v["features"][[f for f in FEATURE_COLUMNS if f in v["features"].columns]].isna().sum().sum())
+        # Exclusions are reported above, so only count unexpected gaps here.
+        rest = v["features"][~v["features"]["clip_id"].isin(excluded)]
+        nan = int(rest[[f for f in FEATURE_COLUMNS if f in rest.columns]].isna().sum().sum())
         if nan:
             flags.append(f"{nan} missing feature values")
     if v["id"] not in in_labels:
@@ -327,8 +394,8 @@ def build_report(volunteers):
     # 2. Dataset
     out += ["## 2. Dataset", ""]
     out.append(_table(
-        ["Volunteer", "Date", "Round order", "Clips", "In labels.csv", "Flags"],
-        [[v["short"], v["check"]["date"], _round_order(v["check"]),
+        ["Volunteer", "Date", "Protocol", "Round order", "Clips", "In labels.csv", "Flags"],
+        [[v["short"], v["check"]["date"], v["check"].get("protocol", "live"), _round_order(v["check"]),
           len(v["features"]) if v["features"] is not None else 0,
           "yes" if v["id"] in in_labels else "no",
           "; ".join(flags[v["id"]]) or "—"] for v in volunteers]))
@@ -339,6 +406,10 @@ def build_report(volunteers):
         "- **Counterbalancing:** odd-numbered volunteers do the unassisted round first and even-numbered ones "
         "the assisted round first. Question order within a round follows a Williams design per volunteer pair.",
         "- **Clips** start at the end of the question and end at the end of the answer.",
+        "- **Protocol:** *live* = the researcher read the questions over a video call, recorded with OBS; "
+        "*automatic* = the web app presented the questions (on-screen text read by the browser's voice) and the "
+        "browser recorded the webcam. Each volunteer did both rounds under one protocol, so the within-speaker "
+        "comparisons are not mixed, but gaze values differ in scale between protocols (camera and resolution).",
         "", "---", "",
     ]
 
@@ -395,14 +466,41 @@ def build_report(volunteers):
     if BASELINE_STATS_PATH.exists():
         gaze_raw = json.loads(BASELINE_STATS_PATH.read_text()).get("gaze", {}).get("domain_mismatch_warning", False)
     if res is not None:
-        nan = int(res["feats"][res["features"]].isna().sum().sum())
+        kept = res["feats"][~res["feats"]["clip_id"].isin(load_gaze_exclusions())]
+        nan = int(kept[res["features"]].isna().sum().sum())
         out.append(f"- {len(res['feats'])} clips, {len(res['features'])} features, "
-                   + ("no missing values." if nan == 0 else f"{nan} missing values."))
+                   + ("no missing values" if nan == 0 else f"{nan} missing values")
+                   + " apart from the gaze exclusions below.")
     out.append("- Features come from `build_features.extract_clip_features()`, the same code that builds the "
                "training table, and are cached per volunteer in `data/raw/volunteer_XX/trial_features.csv`.")
     if gaze_raw:
         out.append("- Gaze features are raw values: the Stage 1 gaze baseline is flagged as a domain mismatch, so "
                    "z-scoring is skipped for that group. They can be compared within a speaker, not across speakers.")
+    excluded = load_gaze_exclusions()
+    if excluded:
+        out.append(f"- {len(excluded)} clip(s) are listed in `data/gaze_exclusions.csv`. Their gaze features are "
+                   "treated as missing here, and training drops those clips (see Section 3.6).")
+    out.append("")
+
+    out += ["### 3.6 Frozen video", "",
+            f"Freezes of {FREEZE_MIN_S:.0f} s or longer, detected on each full recording and mapped onto the clips. "
+            "Audio keeps recording during a freeze, so only the gaze features are affected.", ""]
+    rows = []
+    for v in volunteers:
+        for a in v["check"]["answers"]:
+            if (a.get("frozen_s") or 0) >= FREEZE_MIN_S:
+                cid = _clip_id(v, a)
+                rows.append([cid, f"{a['frozen_s']:.1f} s", f"{_frozen_share(a):.0%}",
+                             f"yes ({excluded[cid]})" if cid in excluded else "no"])
+    unchecked = [v["short"] for v in volunteers if v["check"].get("frozen_intervals") is None]
+    if rows:
+        out.append(_table(["Clip", "Frozen", "Share of clip", "Gaze excluded"], rows))
+        out += ["", "Clips with gaze excluded are dropped from training. Partly frozen clips that are kept have "
+                "gaze values averaged over some still frames; state this as a limitation."]
+    else:
+        out.append("No frozen video found.")
+    if unchecked:
+        out.append(f"\nNot checked (no recording or no ffmpeg): {', '.join(unchecked)}.")
     out += ["", "---", ""]
 
     # 4. Results

@@ -13,8 +13,9 @@ All numbers are pooled out-of-fold metrics with speaker-bootstrap 95% CIs
 Usage:
     python src/evaluate_model.py
     python src/evaluate_model.py --permutations 500   # add permutation p-values (slower)
+    python src/evaluate_model.py --include-excluded   # sensitivity run: keep excluded volunteers
 Output:
-    data/ablation_results.csv
+    data/ablation_results.csv   (ablation_results_all_volunteers.csv with --include-excluded)
     prints model weights/importances from the combined models
 """
 
@@ -42,8 +43,9 @@ REPORT_COLUMNS = [
 ]
 
 
-def main(n_perm: int, n_boot: int) -> None:
-    df, active = load_feature_table(FEATURES_PATH)
+def main(n_perm: int, n_boot: int, include_excluded: bool = False) -> None:
+    df, active = load_feature_table(FEATURES_PATH, include_excluded=include_excluded)
+    suffix = "_all_volunteers" if include_excluded else ""
     if df[SPEAKER_COL].nunique() < 2 or df["label"].nunique() < 2:
         print("[Error] Need at least 2 speakers and both classes for the ablation study.")
         return
@@ -72,7 +74,7 @@ def main(n_perm: int, n_boot: int) -> None:
     print("\n=== Ablation study results (pooled leave-speaker-out, out-of-fold) ===")
     print(results_df[["roc_auc", "roc_auc_ci_low", "roc_auc_ci_high", "balanced_accuracy", "f1", "permutation_p"]].round(3))
     DATA_DIR.mkdir(exist_ok=True)
-    results_df.to_csv(DATA_DIR / "ablation_results.csv")
+    results_df.to_csv(DATA_DIR / f"ablation_results{suffix}.csv")
 
     # Model weights/importances from the combined models fit on all data —
     # descriptive only; the headline numbers are the out-of-fold ones above.
@@ -96,5 +98,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Feature-group ablation study")
     parser.add_argument("--permutations", type=int, default=0, help="Permutation-test shuffles per row (default 0 = skip)")
     parser.add_argument("--bootstrap", type=int, default=1000, help="Speaker-bootstrap resamples for CIs (default 1000)")
+    parser.add_argument("--include-excluded", action="store_true",
+                        help="Keep volunteers listed in data/volunteer_exclusions.csv; writes ablation_results_all_volunteers.csv")
     args = parser.parse_args()
-    main(args.permutations, args.bootstrap)
+    main(args.permutations, args.bootstrap, args.include_excluded)

@@ -1,0 +1,15 @@
+{
+  "name": "decue-interview",
+  "private": true,
+  "type": "module",
+  "description": "Automatic interview page for De-Cue volunteer sessions (Vercel + Neon Postgres). Video never touches this app: it uploads straight to the researcher's laptop.",
+  "scripts": {
+    "dev": "node dev-server.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0"
+  }
+}

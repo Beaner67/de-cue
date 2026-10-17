@@ -15,11 +15,15 @@ Usage:
     python src/train_model.py --model xgb          # XGBoost instead
     python src/train_model.py --no-speaker-norm    # raw (Stage-1 z-scored) features
     python src/train_model.py --permutations 0     # skip the permutation test
+    python src/train_model.py --include-excluded   # sensitivity run: keep volunteers in volunteer_exclusions.csv
 Output:
     models/detector.json        final model (XGBoost native JSON, or logistic-regression weights)
     models/detector_meta.json   features, preprocessing and CV metrics the dashboard must match
     data/cv_results.csv         per-held-out-speaker accuracy
     data/oof_predictions.csv    one out-of-fold probability per clip
+With --include-excluded the CSVs get an _all_volunteers suffix and no final
+model is saved: the deployable model is always the one without excluded
+(protocol-failure) volunteers.
 """
 
 import argparse
@@ -33,6 +37,7 @@ from modeling_utils import (
     check_design,
     evaluate,
     load_feature_table,
+    load_volunteer_exclusions,
     make_model,
     speaker_normalize,
 )
@@ -63,6 +68,7 @@ def save_final_model(model, model_name: str, features: list, speaker_norm: bool,
         json.dump({
             "model_type": model_name,
             "features": features,
+            "excluded_volunteers": load_volunteer_exclusions(),
             "speaker_normalization": (
                 "per-speaker mean centering: subtract the candidate's mean over all their answers "
                 "(feature by feature) before scoring" if speaker_norm else "none"
@@ -71,8 +77,10 @@ def save_final_model(model, model_name: str, features: list, speaker_norm: bool,
         }, f, indent=2)
 
 
-def train_and_evaluate(model_name: str, speaker_norm: bool, n_perm: int, n_boot: int) -> None:
-    df, features = load_feature_table(FEATURES_PATH)
+def train_and_evaluate(model_name: str, speaker_norm: bool, n_perm: int, n_boot: int,
+                       include_excluded: bool = False) -> None:
+    df, features = load_feature_table(FEATURES_PATH, include_excluded=include_excluded)
+    suffix = "_all_volunteers" if include_excluded else ""
     if not features:
         print("[Error] No valid feature columns remain after dropping all-NaN columns.")
         return
@@ -97,13 +105,18 @@ def train_and_evaluate(model_name: str, speaker_norm: bool, n_perm: int, n_boot:
         print(f"Permutation test  p = {summary['permutation_p']:.4f}  ({n_perm} within-speaker label shuffles)")
 
     DATA_DIR.mkdir(exist_ok=True)
-    pd.DataFrame(fold_rows).to_csv(DATA_DIR / "cv_results.csv", index=False)
+    pd.DataFrame(fold_rows).to_csv(DATA_DIR / f"cv_results{suffix}.csv", index=False)
     pd.DataFrame({
         "clip_id": df["clip_id"],
         SPEAKER_COL: df[SPEAKER_COL],
         "label": df["label"],
         "oof_prob_assisted": oof_prob,
-    }).to_csv(DATA_DIR / "oof_predictions.csv", index=False)
+    }).to_csv(DATA_DIR / f"oof_predictions{suffix}.csv", index=False)
+
+    if include_excluded:
+        print("\n[Info] Sensitivity run (--include-excluded): results written with the "
+              f"'{suffix}' suffix; the final model is not saved.")
+        return
 
     # Final model on ALL data, for deployment in the dashboard (not for reporting —
     # the headline numbers are the out-of-fold ones above).
@@ -120,5 +133,7 @@ if __name__ == "__main__":
     parser.add_argument("--no-speaker-norm", action="store_true", help="Disable per-speaker mean centering")
     parser.add_argument("--permutations", type=int, default=1000, help="Permutation-test shuffles (0 to skip; default 1000)")
     parser.add_argument("--bootstrap", type=int, default=1000, help="Speaker-bootstrap resamples for CIs (default 1000)")
+    parser.add_argument("--include-excluded", action="store_true",
+                        help="Keep volunteers listed in data/volunteer_exclusions.csv (sensitivity analysis)")
     args = parser.parse_args()
-    train_and_evaluate(args.model, not args.no_speaker_norm, args.permutations, args.bootstrap)
+    train_and_evaluate(args.model, not args.no_speaker_norm, args.permutations, args.bootstrap, args.include_excluded)

@@ -1,0 +1,4 @@
+# Voice samples for choosing a voice locally; not part of the site.
+public/audio/samples
+# Local-only files
+.devdata

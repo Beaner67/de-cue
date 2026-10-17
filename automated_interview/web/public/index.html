@@ -1,0 +1,1125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interview Session</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Loaded without blocking: a slow font server must never delay the timing code. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700&family=IBM+Plex+Mono:wght@400&family=Instrument+Serif&display=swap" media="print" onload="this.media='all'">
+<style>
+  /* Astryx "Neutral Dark" tokens from the Figma file (automated_interview/web/FIGMA_HANDOFF.md).
+     Dark only. No shadows, gradients, glass or blur; radii 4px (2px on bar
+     tracks, 1px on dots and segments). */
+  :root {
+    --bg-body: #1b1b1b;        --bg-surface: #262626;
+    --text: #fafafa;           --text-2: #a3a3a3;         --text-3: #525252;
+    --border: rgba(255,255,255,.10);                      --border-strong: #525252;
+    --accent: #ebebeb;         --on-accent: #171717;
+    --neutral: rgba(255,255,255,.10);   /* secondary button fill, kbd fill, Waiting badge */
+    --success: #64af4c;        /* status dot "live", Ready badge (text #171717) */
+    --success-fill: #198100;   /* microphone level bar */
+    --warn: #fdcf4f;           --warn-bg: rgba(222,180,51,.24);   /* banner tint over --bg-surface */
+    --error: #ffc6c1;          --error-bg: rgba(255,158,151,.24);
+    --error-badge: #ff705d;    /* "Not working" badge, text #171717 */
+    --rec: #e3193b;
+    --skeleton: #525252;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-12: 48px;
+    --radius: 4px;             /* everything: buttons, badges, banner, boxes, kbd, skeleton */
+
+    --font: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; background: var(--bg-body); color: var(--text); font-family: var(--font); }
+  #app { height: 100%; }
+  p { margin: 0; }
+  button { font-family: var(--font); }
+
+  /* Type */
+  .eyebrow { font: 400 13px/20px var(--mono); color: var(--text-2); }
+  .serif { font-family: var(--serif); font-weight: 400; color: var(--text); margin: 0; }
+  .h-64 { font-size: 64px; line-height: 68px; }
+  .h-60 { font-size: 60px; line-height: 64px; }
+  .h-56 { font-size: 56px; line-height: 62px; }
+  .h-48 { font-size: 48px; line-height: 56px; }
+  .h-36 { font-size: 36px; line-height: 44px; }
+  .para { font-size: 17px; line-height: 27px; color: var(--text-2); }
+  .body { font-size: 14px; line-height: 20px; color: var(--text-2); }
+  .label { font-size: 14px; line-height: 20px; font-weight: 500; color: var(--text); }
+  .support { font-size: 12px; line-height: 20px; color: var(--text-2); }
+  .mono { font-family: var(--mono); font-size: 13px; line-height: 20px; }
+
+  /* Buttons */
+  .primary, .secondary { height: 36px; padding: 0 12px; border: none; border-radius: var(--radius); font-size: 14px; line-height: 20px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+  .primary { background: var(--accent); color: var(--on-accent); }
+  .primary:hover:not(:disabled) { background: #fafafa; }
+  .secondary { background: var(--neutral); color: var(--text); }
+  .secondary:hover:not(:disabled) { background: rgba(255,255,255,.16); }
+  .primary:disabled, .secondary:disabled { opacity: .5; cursor: default; }
+  .controls { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+  kbd { display: inline-flex; align-items: center; justify-content: center; height: 20px; min-width: 20px; padding: 0 4px;
+        background: var(--neutral); border-bottom: 2px solid var(--border-strong); border-radius: var(--radius);
+        font: 400 12px/20px var(--font); color: var(--text-2); }
+  .key-hint { display: inline-flex; align-items: center; gap: var(--space-2); padding-left: var(--space-3); font-size: 12px; line-height: 20px; color: var(--text-2); }
+  /* The hint fades while "Done answering" is locked (the 2 s guard). */
+  .controls:has(.primary:disabled) .key-hint { opacity: .45; }
+
+  /* Site header / footer (every non-interview screen) */
+  .screen { min-height: 100%; display: flex; flex-direction: column; }
+  .site-header { flex: none; height: 56px; display: flex; align-items: center; gap: var(--space-3); padding: 0 var(--space-12); border-bottom: 1px solid var(--border); }
+  .site-header .brand { font-size: 14px; line-height: 20px; font-weight: 700; color: var(--text); }
+  .site-header .sub { flex: 1; font-size: 14px; line-height: 20px; color: var(--text-2); }
+  .site-header .code { font: 400 13px/20px var(--mono); color: var(--text); }
+  .site-footer { flex: none; display: flex; align-items: center; gap: var(--space-6); padding: var(--space-4) var(--space-12); border-top: 1px solid var(--border); }
+  .site-footer p { flex: 1; font-size: 12px; line-height: 20px; color: var(--text-2); }
+
+  /* Message screens: left-aligned 640px column, 96px down and 120px in */
+  .msg-main { flex: 1; padding: 96px 120px var(--space-12); }
+  .msg-col { width: min(640px, 100%); display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-6); }
+  .start-row { display: flex; align-items: center; gap: var(--space-4); padding-top: var(--space-2); }
+  .code-chip { padding: var(--space-4) var(--space-5); background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); font: 400 24px/32px var(--mono); color: var(--text); }
+
+  /* Welcome: two columns */
+  .welcome-main { flex: 1; display: flex; gap: 112px; align-items: flex-start; padding: 72px 120px var(--space-12); }
+  .intro { width: 600px; flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-5); }
+  .intro .start { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); margin-top: var(--space-2); }
+  .steps { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .steps > .support { margin-bottom: var(--space-3); }
+  .step { display: flex; gap: var(--space-6); align-items: flex-start; padding: var(--space-4) 0; border-top: 1px solid var(--border); }
+  .step .num { width: 28px; flex: none; font: 400 13px/20px var(--mono); color: var(--text-2); }
+  .step .text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .step .mins { flex: none; font: 400 13px/20px var(--mono); color: var(--text-2); white-space: nowrap; }
+  .step .item { flex: 1; font-size: 14px; line-height: 20px; color: var(--text); }
+  .msg-col .steps { width: 100%; margin-top: var(--space-4); }
+
+  /* Narration status */
+  .narration { display: inline-flex; align-items: center; gap: var(--space-2); }
+  .narration.inline { padding-left: var(--space-3); }
+  .bars { display: inline-flex; align-items: center; gap: 2px; }
+  .bars i { width: 3px; border-radius: 1px; background: var(--text-2); }
+  .bars i:nth-child(1) { height: 6px; } .bars i:nth-child(2) { height: 12px; } .bars i:nth-child(3) { height: 8px; }
+  .bars i:nth-child(4) { height: 14px; } .bars i:nth-child(5) { height: 6px; }
+  .narration.played .bars i { height: 4px; background: var(--text-3); }
+
+  /* Check your setup */
+  .setup-main { flex: 1; display: flex; flex-direction: column; gap: var(--space-8); padding: var(--space-12) 120px 40px; }
+  .setup-title { display: flex; flex-direction: column; gap: var(--space-3); }
+  .setup-title .para { max-width: 880px; }
+  .setup-cols { display: flex; gap: 64px; align-items: flex-start; }
+  /* 696 x 392 at 1440 wide in the design; capped so wide screens don't scroll. */
+  .camera { flex: 1; min-width: 0; max-width: 720px; display: flex; flex-direction: column; gap: var(--space-3); }
+  .preview-box { position: relative; aspect-ratio: 16 / 9; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .preview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  /* The guide sits on top of the mirrored video, outside it, so its text reads normally. */
+  .face-guide { position: absolute; left: 50%; top: 50%; width: 208px; height: 264px; transform: translate(-50%, -50%);
+                display: flex; align-items: flex-end; justify-content: center; padding-bottom: var(--space-3);
+                border: 1px dashed var(--border-strong); border-radius: var(--radius); pointer-events: none; }
+  .checks { width: 440px; flex: none; display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+  .check { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
+  .check.joined { border-bottom: none; }
+  .check .text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .badge { flex: none; height: 20px; padding: 0 8px; display: inline-flex; align-items: center; border-radius: var(--radius); font-size: 12px; line-height: 20px; white-space: nowrap; }
+  .badge.waiting { background: var(--neutral); color: #e5e5e5; }
+  .badge.ready { background: var(--success); color: #171717; }
+  .badge.failed { background: var(--error-badge); color: #171717; }
+  .check-extra { padding-bottom: var(--space-3); border-bottom: 1px solid var(--border); }
+  .check-extra.action { padding-bottom: var(--space-4); }
+  .checks > .banner { margin-top: var(--space-3); }
+  .checks > .controls { margin-top: var(--space-3); }
+  .checks > .narration { margin-top: var(--space-3); }
+
+  /* Progress bars: mic level and upload */
+  .meter { position: relative; height: 8px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .meter span { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 2px; background: var(--success-fill); transition: width .08s; }
+  .meter.upload span { background: var(--text-3); transition: none; }
+  .progress { width: 100%; display: flex; flex-direction: column; gap: 4px; margin-top: var(--space-2); }
+  .progress .row { display: flex; align-items: baseline; justify-content: space-between; }
+
+  /* Banner */
+  .banner { width: 100%; background: var(--bg-surface); border-radius: var(--radius); overflow: hidden; }
+  .banner > div { display: flex; gap: var(--space-2); align-items: flex-start; padding: var(--space-3) var(--space-4); background: var(--warn-bg); color: var(--warn); }
+  .banner.error > div { background: var(--error-bg); color: var(--error); }
+  .banner img { flex: none; width: 20px; height: 20px; }
+  .banner .title { font-size: 14px; line-height: 20px; font-weight: 500; }
+  .banner .desc { font-size: 12px; line-height: 20px; }
+
+  /* Loading skeleton */
+  .sk { background: var(--skeleton); opacity: .25; border-radius: var(--radius); }
+  .sk-col { width: 600px; flex: none; display: flex; flex-direction: column; gap: var(--space-4); }
+  .sk-row { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4) 0; border-top: 1px solid var(--border); }
+
+  /* Interview layout: the assistant overlay is docked at the top centre, right
+     under a laptop's webcam, where commercial interview copilots sit; the
+     question is below it. It keeps the same size and place in both rounds
+     (it shows "Paused" when off), so only reading the answer differs.
+     Solid surface and a border: no shadow, no glass. */
+  #interview { height: 100%; display: flex; flex-direction: column; align-items: center; }
+  .overlay { flex: none; width: min(680px, calc(100% - 32px)); height: 36vh; min-height: 220px; display: flex; flex-direction: column;
+             background: var(--bg-surface); border: 1px solid var(--border-strong); border-top: none; border-radius: 0 0 4px 4px; }
+  .overlay header { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); }
+  /* While an answer is on screen the border turns bright, to draw the eye up
+     to it; the size and place stay the same. */
+  .overlay.active { border-color: var(--text); }
+  .overlay .title { flex: 1; font-size: 14px; line-height: 20px; font-weight: 500; color: var(--text); }
+  .overlay main { flex: 1; overflow-y: auto; padding: var(--space-4) var(--space-5); }
+  /* One-line caption under the overlay saying what to do with it. A fixed
+     height, so the question area sits at the same place in both rounds. */
+  .overlay-note { flex: none; width: min(680px, calc(100% - 32px)); height: 20px; margin-top: var(--space-2);
+                  font-size: 12px; line-height: 20px; color: var(--text-2); text-align: center;
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .status-wrap { display: inline-flex; align-items: center; gap: var(--space-2); font-size: 12px; line-height: 20px; color: var(--text-2); }
+  .dot { flex: none; width: 8px; height: 8px; border-radius: 1px; background: var(--text-2); }
+  .dot.live { background: var(--success); }
+  .center { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); text-align: center; }
+  .heading { margin: 0; font-size: 17px; line-height: 24px; font-weight: 700; color: var(--text); }
+  .line { font-size: 14px; line-height: 20px; color: var(--text-2); }
+  .answer-label { font-size: 12px; line-height: 20px; color: var(--text-3); }
+  .stream { display: flex; flex-direction: column; gap: var(--space-3); }
+  .answer { white-space: pre-wrap; font-size: 16px; line-height: 25px; color: var(--text); }
+  .answer.pending { color: var(--text-2); }
+  .level { display: flex; align-items: center; gap: 4px; }
+  .level span { width: 4px; border-radius: 1px; background: var(--text-3); }
+  .level span:nth-child(1){height:8px}.level span:nth-child(2){height:16px}.level span:nth-child(3){height:24px}
+  .level span:nth-child(4){height:12px}.level span:nth-child(5){height:20px}.level span:nth-child(6){height:10px}.level span:nth-child(7){height:6px}
+
+  .question-area { flex: 1; min-height: 0; overflow-y: auto; width: min(820px, 100%); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: var(--space-5); padding: var(--space-6) var(--space-8); }
+  .q-text { font-family: var(--serif); font-size: 40px; line-height: 50px; color: var(--text); }
+  .q-text.round { font-size: 36px; line-height: 44px; }
+  .script { width: 100%; display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-5) var(--space-6); background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius); font-size: 16px; line-height: 25px; color: var(--text); }
+  .state { display: flex; align-items: center; gap: var(--space-3); min-height: 20px; font-size: 14px; line-height: 20px; font-weight: 500; color: var(--text-2); }
+  .state.live { color: var(--text); }
+  .state .timer { font: 400 13px/20px var(--mono); color: var(--text-2); }
+
+  .bottombar { flex: none; width: 100%; height: 48px; display: flex; align-items: center; gap: var(--space-4); padding: 0 var(--space-6); border-top: 1px solid var(--border); }
+  .bottombar .spacer { flex: 1; }
+  .rec { display: inline-flex; align-items: center; gap: var(--space-2); font-size: 14px; line-height: 20px; font-weight: 500; color: var(--text); }
+  .rec::before { content: ""; width: 8px; height: 8px; border-radius: 1px; background: var(--rec); }
+  .bottombar .progress-text { font-size: 12px; line-height: 20px; color: var(--text-2); }
+  .segments { display: flex; align-items: center; gap: 4px; }
+  .segments i { width: 20px; height: 4px; border-radius: 1px; background: var(--text-3); }
+  .segments i.break { margin-left: 4px; }
+  .segments i.done { background: var(--text-2); }
+  .segments i.current { background: var(--text); }
+
+  /* Narrow screens */
+  #narrow { display: none; }
+  #narrow .site-header { padding: 0 var(--space-4); }
+  #narrow .narrow-main { display: flex; flex-direction: column; gap: var(--space-5); padding: var(--space-12) var(--space-4) var(--space-8); }
+  #narrow .serif { font-size: 40px; line-height: 44px; }
+
+  /* Between 900 and 1200px wide the 120px gutters and fixed columns don't fit. */
+  @media (max-width: 1199px) {
+    .msg-main, .welcome-main, .setup-main { padding-left: var(--space-12); padding-right: var(--space-12); }
+    .welcome-main { gap: 64px; }
+    .intro, .sk-col { width: 480px; }
+    .checks { width: 380px; }
+    .setup-cols { gap: 40px; }
+  }
+  @media (max-width: 899px) {
+    #narrow { display: flex; flex-direction: column; min-height: 100%; }
+    #app { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="narrow">
+  <div class="site-header"><span class="brand">De-Cue</span><span class="body">Research interview</span></div>
+  <div class="narrow-main">
+    <p class="serif">Please use a laptop or desktop</p>
+    <p class="para">This interview needs a screen at least 900 pixels wide, a webcam and a microphone.</p>
+    <p class="para">Open the same link in Chrome or Edge on your computer.</p>
+  </div>
+</div>
+<div id="app">
+  <div class="screen">
+    <div class="site-header"><span class="brand">De-Cue</span><span class="sub">Research interview</span><span class="support">Session</span><span class="code">····</span></div>
+    <div class="welcome-main">
+      <div class="sk-col">
+        <div class="sk" style="height:14px;width:120px"></div>
+        <div style="height:8px"></div>
+        <div class="sk" style="height:52px;width:93%"></div>
+        <div class="sk" style="height:52px;width:63%"></div>
+        <div style="height:16px"></div>
+        <div class="sk" style="height:16px;width:100%"></div>
+        <div class="sk" style="height:16px;width:93%"></div>
+        <div class="sk" style="height:16px;width:70%"></div>
+        <div style="height:24px"></div>
+        <div class="sk" style="height:36px;width:240px"></div>
+      </div>
+      <div class="steps">
+        <div class="sk" style="height:12px;width:96px;margin-bottom:12px"></div>
+        <div class="sk-row"><div class="sk" style="height:14px;width:280px;max-width:80%"></div><div class="sk" style="height:12px;width:360px;max-width:100%"></div></div>
+        <div class="sk-row"><div class="sk" style="height:14px;width:280px;max-width:80%"></div><div class="sk" style="height:12px;width:360px;max-width:100%"></div></div>
+        <div class="sk-row"><div class="sk" style="height:14px;width:280px;max-width:80%"></div><div class="sk" style="height:12px;width:360px;max-width:100%"></div></div>
+        <div class="sk-row"><div class="sk" style="height:14px;width:280px;max-width:80%"></div><div class="sk" style="height:12px;width:360px;max-width:100%"></div></div>
+        <div class="sk-row" style="padding-bottom:0"><p class="support">Loading your session…</p></div>
+      </div>
+    </div>
+    <div class="site-footer"><p>Your video goes only to the researcher’s computer. This website keeps only question timings.</p></div>
+  </div>
+</div>
+
+<script>
+// ---------------------------------------------------------------- basics
+const token = new URLSearchParams(location.search).get('s') || '';
+const app = document.getElementById('app');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+// Every timestamp uses the page's monotonic clock on the epoch scale, so
+// differences between events (all that make_clips.py uses) are exact.
+const now = () => (performance.timeOrigin + performance.now()) / 1000;
+
+function el(tag, attrs = {}, ...children) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e[k] = v;
+    else e.setAttribute(k, v);
+  }
+  e.append(...children.filter(c => c !== null && c !== undefined));
+  return e;
+}
+const show = (...nodes) => app.replaceChildren(...nodes);
+
+let session, plan, settings;
+let busy = false;   // recording or uploading: warn before the tab closes
+window.addEventListener('beforeunload', e => { if (busy) { e.preventDefault(); e.returnValue = ''; } });
+
+// ---------------------------------------------------------------- page chrome
+// The short code the volunteer quotes to the researcher, e.g. 7C1E-08: the
+// first 4 letters/digits of the session id and the volunteer number.
+function sessionCode() {
+  if (!session) return '····';
+  return `${session.session_id.replace(/[^A-Za-z0-9]/g, '').slice(0, 4).toUpperCase()}-${session.volunteer_id.slice(-2)}`;
+}
+const siteHeader = () => el('div', { class: 'site-header' },
+  el('span', { class: 'brand' }, 'De-Cue'), el('span', { class: 'sub' }, 'Research interview'),
+  el('span', { class: 'support' }, 'Session'), el('span', { class: 'code' }, sessionCode()));
+// The consent-form and contact links come back once they have URLs.
+const siteFooter = () => el('div', { class: 'site-footer' },
+  el('p', {}, 'Your video goes only to the researcher’s computer. This website keeps only question timings.'));
+const screen = (main) => el('div', { class: 'screen' }, siteHeader(), main, siteFooter());
+const eyebrow = text => el('p', { class: 'eyebrow' }, text);
+const heading = (text, size) => el('h1', { class: `serif h-${size}` }, text);
+const para = text => el('p', { class: 'para' }, text);
+// A one-column message screen: sound gate, sending, done, errors.
+const message = (...children) => screen(el('div', { class: 'msg-main' }, el('div', { class: 'msg-col' }, ...children)));
+
+// A numbered list (welcome's "What happens", done's "What happens next").
+function steps(title, rows) {
+  return el('div', { class: 'steps' }, el('p', { class: 'support' }, title),
+    ...rows.map((r, i) => el('div', { class: 'step' },
+      el('span', { class: 'num' }, String(i + 1).padStart(2, '0')),
+      r.title
+        ? el('div', { class: 'text' }, el('p', { class: 'label' }, r.title), el('p', { class: 'body' }, r.text))
+        : el('p', { class: 'item' }, r.text),
+      r.mins ? el('span', { class: 'mins' }, r.mins) : null)));
+}
+
+function banner(kind, title, desc) {
+  return el('div', { class: 'banner' + (kind === 'error' ? ' error' : '') },
+    el('div', {}, el('img', { src: '/icons/warning.svg', width: '20', height: '20', alt: '' }),
+      el('div', {}, el('p', { class: 'title' }, title), el('p', { class: 'desc' }, desc))));
+}
+
+// ---------------------------------------------------------------- event log
+// Events go to the database (through /api/events) and, as a backup, to the
+// researcher's laptop. remote_session.py rebuilds session_log.jsonl from them.
+let seq = 0;
+const pending = [];
+const mirror = [];
+function log(event, fields = {}) {
+  const record = { seq: ++seq, event, t: now(), ...fields };
+  pending.push(record);
+  mirror.push(record);
+  flushEvents();
+  flushMirror();
+  return record;
+}
+let flushing = false;
+async function flushEvents() {
+  if (flushing) return;
+  flushing = true;
+  try {
+    while (pending.length) {
+      const batch = pending.slice(0, 20);
+      try {
+        const r = await fetch('/api/events?s=' + encodeURIComponent(token), {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ events: batch }),
+        });
+        // Retry network and server errors; a 4xx will never succeed, so drop it
+        // (the laptop's mirror still has the events).
+        if (r.status >= 500) throw new Error(r.status);
+        pending.splice(0, batch.length);
+      } catch { await sleep(2000); }
+    }
+  } finally { flushing = false; }
+}
+let mirroring = false;
+async function flushMirror() {
+  if (mirroring || !session) return;
+  mirroring = true;
+  try {
+    while (mirror.length) {
+      const batch = mirror.slice(0, 20);
+      try {
+        await receiverPost('events', JSON.stringify({ events: batch }), 'application/json');
+        mirror.splice(0, batch.length);
+      } catch { await sleep(3000); }
+    }
+  } finally { mirroring = false; }
+}
+
+// ---------------------------------------------------------------- receiver (researcher's laptop)
+function receiverUrl(route, params = {}) {
+  const u = new URL(session.receiver.url.replace(/\/$/, '') + '/' + route);
+  u.searchParams.set('key', session.receiver.key);
+  u.searchParams.set('session', session.session_id);
+  for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
+  return u.href;
+}
+async function receiverPost(route, body, type, params) {
+  const r = await fetch(receiverUrl(route, params), { method: 'POST', headers: { 'Content-Type': type }, body });
+  if (!r.ok) throw new Error('receiver ' + r.status);
+  return r.json();
+}
+async function receiverReachable() {
+  try {
+    const r = await fetch(receiverUrl('ping'), { cache: 'no-store' });
+    return r.ok;
+  } catch { return false; }
+}
+
+// ---------------------------------------------------------------- leaving mid-interview
+// A started interview can't carry on after the page is closed or reloaded
+// (load() refuses a session that isn't 'created'), so the page tells the
+// laptop at once, and remote_session.py deletes everything of the session, as
+// the consent form promises on withdrawal. Only between session_start (busy
+// is set just before it) and session_end: before that the link still works,
+// and after it only the upload is left, which must never be wiped. A beacon
+// can't set headers, so it authenticates like every receiver call, with the
+// key and session id in the query string. It sits alongside the
+// beforeunload warning and changes nothing about it.
+let sessionEnded = false;   // set right after log('session_end')
+window.addEventListener('pagehide', () => {
+  if (!busy || sessionEnded || !session || !navigator.sendBeacon) return;
+  try { navigator.sendBeacon(receiverUrl('abort'), JSON.stringify({ reason: 'pagehide' })); } catch {}
+});
+
+// Chunks go up one at a time, in order, with retries; the laptop writes each
+// to its own numbered file, so a retried chunk just overwrites itself.
+const uploads = [];
+let uploadedBytes = 0, totalBytes = 0, chunkIndex = 0, uploading = false;
+function queueChunk(blob) {
+  uploads.push({ i: chunkIndex++, blob });
+  totalBytes += blob.size;
+  pumpUploads();
+}
+async function pumpUploads() {
+  if (uploading) return;
+  uploading = true;
+  try {
+    while (uploads.length) {
+      const { i, blob } = uploads[0];
+      try {
+        await receiverPost('upload', blob, 'application/octet-stream', { i });
+        uploads.shift();
+        uploadedBytes += blob.size;
+        onUploadProgress();
+      } catch { await sleep(2000); }
+    }
+  } finally { uploading = false; }
+}
+let onUploadProgress = () => {};
+
+// ---------------------------------------------------------------- speech
+let voice = null;
+function pickVoice() {
+  const voices = speechSynthesis.getVoices().filter(v => /^en(-|_|$)/i.test(v.lang));
+  // Local voices first: Chrome's online voices can stop after ~15 s without
+  // firing "end", which would hold up the question-end mark.
+  const rank = v => (v.localService ? 0 : 2) + (/en-(GB|US)/i.test(v.lang) ? 0 : 1);
+  voice = voices.sort((a, b) => rank(a) - rank(b))[0] || null;
+}
+if ('speechSynthesis' in window) {
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+}
+
+// Pre-recorded questions (automated_interview/tools/make_question_audio.py): a natural voice,
+// identical for every volunteer, with silence trimmed so "ended" is the moment
+// the last word ends. A file is used only if its text still matches the
+// question; otherwise the browser's voice reads it.
+let recorded = null;
+const audioCache = {};
+async function loadRecorded() {
+  try {
+    const r = await fetch('/audio/manifest.json', { cache: 'no-store' });
+    if (!r.ok) return;
+    recorded = await r.json();
+    for (const entry of Object.values(recorded.files)) {
+      const a = new Audio('/audio/' + entry.file);
+      a.preload = 'auto';
+      audioCache[entry.file] = a;
+    }
+  } catch { recorded = null; }
+}
+// Optional mute, the volunteer's choice. It only silences: recordings keep
+// playing at volume 0 and the browser voice speaks at volume 0, so
+// question_end, the narration gating and every timing are the same as
+// unmuted. Toggles during the interview are logged (voice_muted) so muted
+// answers can be told apart in the analysis.
+let voiceMuted = false;
+const muteButtons = new Set();
+function setMuted(muted) {
+  voiceMuted = muted;
+  Object.values(audioCache).forEach(a => { a.muted = muted; });
+  muteButtons.forEach(b => {
+    if (!document.body.contains(b) && b !== (ui && ui.mute)) { muteButtons.delete(b); return; }
+    b.textContent = muted ? 'Unmute voice' : 'Mute voice';
+    b.setAttribute('aria-pressed', String(muted));
+  });
+}
+function muteButton() {
+  const b = el('button', { class: 'secondary', 'aria-pressed': String(voiceMuted) }, voiceMuted ? 'Unmute voice' : 'Mute voice');
+  b.onclick = () => {
+    setMuted(!voiceMuted);
+    b.blur();   // so a later Space press ends the answer instead of toggling this
+    if (busy && !sessionEnded) log('voice_muted', { muted: voiceMuted });
+  };
+  muteButtons.add(b);
+  return b;
+}
+
+function recordedFor(key, text) {
+  const entry = recorded && recorded.files[key];
+  return entry && entry.text === text ? entry : null;
+}
+
+// Resolves when the question has been read: {fallback, source}. fallback is
+// true when the end had to come from a timer instead of the player.
+async function speak(text, key) {
+  const entry = recordedFor(key, text);
+  if (entry) {
+    const result = await playRecorded(entry);
+    if (result) return { ...result, source: 'recorded' };
+    // The file would not play at all: read it with the browser's voice instead.
+  }
+  return { ...(await speakBrowser(text)), source: 'browser' };
+}
+
+function playRecorded(entry) {
+  return new Promise(resolve => {
+    speechSynthesis.cancel();
+    const a = audioCache[entry.file];
+    let started = false, done = false;
+    const finish = value => {
+      if (done) return;
+      done = true; clearTimeout(timer); a.onended = a.onerror = a.onplaying = null;
+      resolve(value);
+    };
+    const timer = setTimeout(() => { a.pause(); finish(started ? { fallback: true } : null); }, (entry.duration_s + 4) * 1000);
+    a.onplaying = () => { started = true; };
+    a.onended = () => finish({ fallback: false });
+    a.onerror = () => finish(started ? { fallback: true } : null);
+    a.currentTime = 0;
+    a.play().catch(() => finish(null));
+  });
+}
+
+// The browser's own voice, as a fallback. If it never reports the end, a
+// timer based on the text length ends it, and the event says so.
+function speakBrowser(text) {
+  return new Promise(resolve => {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    if (voice) u.voice = voice;
+    u.rate = 1.0;
+    u.volume = voiceMuted ? 0 : 1;   // mute only; the end timer is unchanged
+    let done = false;
+    const finish = (fallback) => { if (!done) { done = true; clearTimeout(timer); resolve({ fallback }); } };
+    const words = text.trim().split(/\s+/).length;
+    const timer = setTimeout(() => { speechSynthesis.cancel(); finish(true); }, (words / 2.2 + 4) * 1000);
+    u.onend = () => finish(false);
+    u.onerror = () => finish(true);
+    speechSynthesis.speak(u);
+  });
+}
+
+// ---------------------------------------------------------------- start
+async function load() {
+  try {
+    const r = await fetch('/api/session?s=' + encodeURIComponent(token), { cache: 'no-store' });
+    const data = await r.json();
+    if (!r.ok) {
+      const finished = r.status === 410;
+      return show(message(
+        eyebrow(finished ? 'Server said: session complete' : 'Server said: session not found'),
+        heading('This link is not available', 56),
+        para(finished ? data.error
+          : 'It may have been typed incorrectly, or the researcher may have replaced it. Ask the researcher for a new link.')));
+    }
+    session = data; plan = data.plan; settings = data.settings;
+    // The instructions are part of the protocol: without them, don't start.
+    const ir = await fetch('/instructions.json', { cache: 'no-store' });
+    if (!ir.ok) throw new Error('instructions');
+    INSTR = await ir.json();
+    await loadRecorded();
+    if (session.status !== 'created') {
+      return show(message(
+        eyebrow('Already started on this link'),
+        heading('This session was interrupted', 56),
+        para('The interview was already started on this link, so it cannot carry on here. Please contact the researcher for a new link and quote this code:'),
+        el('div', { class: 'code-chip' }, sessionCode())));
+    }
+    soundGate();
+  } catch {
+    show(message(eyebrow('No connection'), heading('Could not load the session', 56),
+      para('Check your internet connection and reload this page.')));
+  }
+}
+
+// ---------------------------------------------------------------- spoken instructions
+// Every instruction comes from instructions.json, shown as text and read aloud
+// from its recording (automated_interview/tools/make_question_audio.py), so every volunteer
+// gets the same briefing in the same voice.
+let INSTR = {};
+let narrating = false;
+const paras = key => INSTR[key].split('\n\n').map(t => el('p', { class: 'para' }, t));
+
+function stopNarration() {
+  narrating = false;
+  Object.values(audioCache).forEach(a => a.pause());
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+// Reads an instruction aloud. Buttons in `gate` stay disabled until it has
+// played once or been skipped. While it plays, `replay` is a Skip button,
+// enabled only after SKIP_AFTER_S so a stray click can't skip the briefing;
+// afterwards it reads the instruction again. The text stays on screen, and
+// every skip is logged (instructions_skipped) so a volunteer who skipped a
+// round briefing can be told apart in the analysis.
+const SKIP_AFTER_S = 5;
+const skippedInstr = new Set();      // narrationStatus() shows these as skipped
+const skippedBeforeStart = [];       // logged once recording has started
+function noteSkip(key, heard) {
+  skippedInstr.add(key);
+  const fields = { instruction: key, heard_s: heard === null ? null : Math.round(heard * 10) / 10 };
+  if (busy) log('instructions_skipped', fields); else skippedBeforeStart.push(fields);
+}
+async function narrate(key, gate = [], replay = null) {
+  gate.forEach(b => { b.disabled = true; });
+  narrating = true;
+  skippedInstr.delete(key);
+  let skip, again, unlock;
+  const skipped = new Promise(resolve => { skip = resolve; });
+  if (replay) {
+    again = replay.onclick;
+    replay.disabled = true;
+    replay.textContent = 'Skip instructions';
+    replay.onclick = () => {
+      replay.blur();
+      const entry = recordedFor('instr_' + key, INSTR[key]);
+      const audio = entry ? audioCache[entry.file] : null;
+      noteSkip(key, audio ? audio.currentTime : null);
+      stopNarration();
+      // A paused player never reports "ended", so speak() would wait for its
+      // fallback timer, which could later pause a replay of the same file.
+      // Ending it the way it ends by itself clears that timer.
+      if (audio) audio.dispatchEvent(new Event('ended'));
+      skip();
+    };
+    unlock = setTimeout(() => { replay.disabled = false; }, SKIP_AFTER_S * 1000);
+  }
+  await Promise.race([speak(INSTR[key], 'instr_' + key), skipped]);
+  narrating = false;
+  gate.forEach(b => { b.disabled = false; });
+  if (replay) {
+    clearTimeout(unlock);
+    replay.textContent = 'Replay instructions';
+    replay.onclick = again;
+    replay.disabled = false;
+  }
+}
+
+// Display only: "Reading aloud 0:21 / 0:53" while the instruction plays, then
+// "Read aloud once. Replay it any time." (or "Skipped" after a skip). It reads
+// the player's state and changes nothing about narrate() or its gating.
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+function narrationStatus(key, inline = false) {
+  const entry = recordedFor('instr_' + key, INSTR[key]);
+  const audio = entry ? audioCache[entry.file] : null;
+  const label = el('span', { class: 'support' });
+  const time = el('span', { class: 'mono', style: 'color: var(--text-2)' });
+  const bars = el('span', { class: 'bars' }, el('i'), el('i'), el('i'), el('i'), el('i'));
+  const box = el('div', { class: 'narration' + (inline ? ' inline' : '') }, bars, label, time);
+  const update = () => {
+    const playing = audio ? (!audio.paused && !audio.ended) : narrating;
+    box.classList.toggle('played', !playing);
+    label.textContent = playing ? (voiceMuted ? 'Voice muted. Read along on screen' : 'Reading aloud')
+      : skippedInstr.has(key) ? 'Skipped. Replay it any time.' : 'Read aloud once. Replay it any time.';
+    time.textContent = playing && audio && audio.duration ? `${mmss(audio.currentTime)} / ${mmss(audio.duration)}` : '';
+  };
+  update();
+  const timer = setInterval(() => { if (!document.body.contains(box)) clearInterval(timer); else update(); }, 250);
+  // Before the first frame is attached, show the playing state the narration is about to start in.
+  setTimeout(update, 0);
+  return box;
+}
+
+// Browsers only play sound after a click on the page, so the first screen
+// asks for one before anything is read aloud.
+function soundGate() {
+  show(message(
+    eyebrow('Before you start'),
+    heading('Turn your sound on', 64),
+    para('The instructions and the interview questions are read aloud, so please turn up your volume. Headphones work best. If you would rather read than listen, you can mute the voice later; everything is also shown on screen.'),
+    el('div', { class: 'start-row' },
+      el('button', { class: 'primary', onclick: welcome }, 'Start'),
+      el('p', { class: 'support' }, 'Use Chrome or Edge on a laptop or desktop.')),
+  ));
+}
+
+function welcome() {
+  const next = el('button', { class: 'primary', onclick: () => { stopNarration(); deviceCheck(); } }, 'Set up camera and microphone');
+  const replay = el('button', { class: 'secondary', onclick: () => narrate('welcome', [], replay) }, 'Replay instructions');
+  // Shown, not read aloud: it isn't in instructions.json.
+  const whatHappens = steps('What happens', [
+    { title: 'Check your camera, microphone and sound', text: 'The page tests each one before you can begin.', mins: '2 min' },
+    { title: 'Round one, four questions', text: 'The instructions are shown and read aloud before the round starts.', mins: '7 min' },
+    { title: 'Round two, four questions', text: 'In one round you answer on your own. In the other, you must use the answers an AI assistant suggests at the top of the screen.', mins: '7 min' },
+    { title: 'Your recording is sent', text: 'Keep the page open until it says All done.', mins: '2 min' },
+  ]);
+  show(screen(el('div', { class: 'welcome-main' },
+    el('div', { class: 'intro' },
+      eyebrow('Before you start'),
+      heading('Your mock interview', 60),
+      ...paras('welcome'),
+      el('div', { class: 'start' }, el('div', { class: 'controls' }, next, replay, muteButton()), narrationStatus('welcome'))),
+    whatHappens)));
+  narrate('welcome', [next], replay);
+}
+
+let stream, recorder;
+async function deviceCheck() {
+  const video = el('video', { class: 'preview', autoplay: '', muted: '', playsinline: '' });
+  video.muted = true;
+  const meter = el('span');
+  const err = el('div', { hidden: '' });
+  const badges = { cam: el('span', { class: 'badge waiting' }, 'Waiting'), mic: el('span', { class: 'badge waiting' }, 'Waiting'),
+                   voice: el('span', { class: 'badge waiting' }, 'Waiting'), link: el('span', { class: 'badge waiting' }, 'Waiting') };
+  const begin = el('button', { class: 'primary', disabled: '' }, 'Begin interview');
+  const testVoice = el('button', { class: 'secondary' }, 'Play test voice');
+  const replay = el('button', { class: 'secondary', onclick: () => narrate('setup', [], replay) }, 'Replay instructions');
+  const row = (k, title, desc, joined) => el('div', { class: 'check' + (joined ? ' joined' : '') },
+    el('div', { class: 'text' }, el('p', { class: 'label' }, title), el('p', { class: 'support' }, desc)), badges[k]);
+  const showBanner = (kind, title, desc) => { err.replaceChildren(banner(kind, title, desc)); err.hidden = false; };
+  const clearBanner = () => { err.replaceChildren(); err.hidden = true; };
+  show(screen(el('div', { class: 'setup-main' },
+    el('div', { class: 'setup-title' }, heading('Check your setup', 48), ...paras('setup')),
+    el('div', { class: 'setup-cols' },
+      el('div', { class: 'camera' },
+        el('div', { class: 'preview-box' }, video,
+          el('div', { class: 'face-guide' }, el('span', { class: 'support' }, 'Keep your face inside'))),
+        el('p', { class: 'support' }, 'Mirrored preview. Only you see it until the interview begins.')),
+      el('div', { class: 'checks' },
+        row('cam', 'Camera', 'Your face is centred and well lit'),
+        row('mic', 'Microphone', 'The bar moves when you talk', true),
+        el('div', { class: 'check-extra' }, el('div', { class: 'meter' }, meter)),
+        row('voice', 'Sound', 'Play the test voice and check you can hear it', true),
+        el('div', { class: 'check-extra action' }, testVoice),
+        row('link', 'Connection', 'Link to the researcher’s computer'),
+        err,
+        el('div', { class: 'controls' }, begin, replay, muteButton()),
+        narrationStatus('setup'))))));
+  narrate('setup', [], replay);
+
+  const state = { cam: false, mic: false, voice: false, link: false };
+  // `look` only changes the badge: a check that is still being tried shows
+  // Waiting, one that failed shows Not working. The gating is unchanged.
+  const set = (k, ok, look = ok ? 'ready' : 'failed') => {
+    state[k] = ok;
+    badges[k].className = 'badge ' + look;
+    badges[k].textContent = { ready: 'Ready', waiting: 'Waiting', failed: 'Not working' }[look];
+    begin.disabled = !Object.values(state).every(Boolean);
+  };
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    });
+  } catch (e) {
+    showBanner('error', 'The browser could not use your camera and microphone.', 'Allow access in the address bar, then reload the page.');
+    set('cam', false); set('mic', false);
+    return;
+  }
+  video.srcObject = stream;
+  set('cam', true);
+
+  const ctx = new AudioContext();
+  const analyser = ctx.createAnalyser();
+  analyser.fftSize = 512;
+  ctx.createMediaStreamSource(stream).connect(analyser);
+  const buf = new Uint8Array(analyser.fftSize);
+  (function tick() {
+    if (!document.body.contains(meter)) return ctx.close();
+    analyser.getByteTimeDomainData(buf);
+    let peak = 0;
+    for (const v of buf) peak = Math.max(peak, Math.abs(v - 128));
+    meter.style.width = Math.min(100, peak / 64 * 100) + '%';
+    // While the instructions play, the speakers can move the bar; only the
+    // volunteer's own voice should tick the microphone check.
+    if (peak > 12 && !state.mic && !narrating) set('mic', true);
+    requestAnimationFrame(tick);
+  })();
+
+  testVoice.onclick = async () => {
+    if (!recorded && !('speechSynthesis' in window)) { showBanner('error', 'This browser cannot read questions aloud.', 'Please use Chrome or Edge.'); return; }
+    testVoice.disabled = true;
+    stopNarration();
+    // The sound check must be heard, so the test voice ignores the mute.
+    const wasMuted = voiceMuted;
+    setMuted(false);
+    await speak('Hello. This is the voice that will read the interview questions.', 'test');
+    setMuted(wasMuted);
+    testVoice.disabled = false;
+    set('voice', true);
+  };
+
+  (async function checkLink() {
+    for (let attempt = 0; attempt < 100 && document.body.contains(begin); attempt++) {
+      if (await receiverReachable()) { set('link', true); clearBanner(); return; }
+      set('link', false, 'waiting');
+      showBanner('warn', 'Waiting for the researcher’s computer', 'If this has not cleared within a minute, tell the researcher.');
+      await sleep(3000);
+    }
+  })();
+
+  begin.onclick = () => { stopNarration(); startInterview(); };
+}
+
+// ---------------------------------------------------------------- interview
+let cursor = 0;
+let ui;   // elements of the interview screen
+let renderId = 0;
+
+function buildInterview() {
+  const recBadge = el('span', { class: 'rec' }, 'Recording');
+  const progress = el('span', { class: 'progress-text' });
+  // One segment per question, with a gap between the rounds.
+  const segments = plan.map((p, i) => el('i', { class: i > 0 && p.round !== plan[i - 1].round ? 'break' : '' }));
+  const qLabel = el('p', { class: 'eyebrow' });
+  const qText = el('div', { class: 'q-text' });
+  const state = el('div', { class: 'state' });
+  const done = el('button', { class: 'primary' }, 'Done answering');
+  const repeat = el('button', { class: 'secondary' }, 'Repeat question');
+  const hint = el('span', { class: 'key-hint' }, 'or press', el('kbd', {}, 'Space'));
+  const controls = el('div', { class: 'controls' }, done, repeat, hint);
+  const panelStatus = el('span');
+  const panelDot = el('span', { class: 'dot' });
+  const panel = el('main');
+  const overlay = el('section', { class: 'overlay' },
+    el('header', {}, el('span', { class: 'title' }, 'Assistant'),
+      el('span', { class: 'status-wrap' }, panelDot, panelStatus)),
+    panel);
+  const panelNote = el('p', { class: 'overlay-note' });
+  show(el('div', { id: 'interview' },
+    overlay,
+    panelNote,
+    el('div', { class: 'question-area' }, qLabel, qText, state, controls),
+    el('div', { class: 'bottombar' }, recBadge, el('span', { class: 'spacer' }), progress,
+      el('span', { class: 'segments' }, ...segments))));
+  ui = { progress, segments, qLabel, qText, state, done, repeat, hint, controls, overlay, panel, panelStatus, panelDot, panelNote };
+  ui.mute = muteButton();
+}
+
+// Bottom bar: questions before `doneCount` are done; `current` is highlighted.
+function setProgress(text, doneCount, current = -1) {
+  ui.progress.textContent = text;
+  ui.segments.forEach((s, i) => {
+    s.classList.toggle('done', i < doneCount && i !== current);
+    s.classList.toggle('current', i === current);
+  });
+}
+function setState(kind, label, extra) {
+  ui.state.className = 'state' + (kind === 'live' ? ' live' : '');
+  ui.state.replaceChildren(el('span', { class: 'dot' + (kind === 'live' ? ' live' : '') }), label, ...(extra ? [extra] : []));
+}
+
+function setPanelStatus(text, live) { ui.panelStatus.textContent = text; ui.panelDot.className = 'dot' + (live ? ' live' : ''); }
+// The caption under the overlay. Display only: it is shown, not read aloud
+// (it isn't in instructions.json), and changes no timing or logging.
+function setPanelNote(text) { ui.panelNote.textContent = text; }
+const ASSIST_NOTE = 'Use the suggested answer above for your reply. Read it, rephrase it, or add to it.';
+function panelPaused() {
+  renderId++;
+  ui.overlay.classList.remove('active');
+  setPanelStatus('Paused', false);
+  setPanelNote('The assistant is off. Answer this round on your own.');
+  ui.panel.replaceChildren(el('div', { class: 'center' }, el('h2', { class: 'heading' }, 'Paused'), el('p', { class: 'line' }, 'The assistant is off for this round.')));
+}
+function panelListening() {
+  renderId++;
+  ui.overlay.classList.remove('active');
+  setPanelStatus('Listening', true);
+  setPanelNote(ASSIST_NOTE);
+  const level = el('div', { class: 'level' });
+  for (let i = 0; i < 7; i++) level.append(el('span'));
+  ui.panel.replaceChildren(el('div', { class: 'center' }, level, el('p', { class: 'line' }, 'Listening for the next question')));
+}
+
+// Same behaviour as the floating assistant window: "Generating answer…" at once,
+// the first word after the question's delay, then word by word.
+function panelAnswer(item, answerId, questionEndT) {
+  const id = ++renderId;
+  ui.overlay.classList.add('active');
+  setPanelStatus('Answering', true);
+  setPanelNote(ASSIST_NOTE);
+  const thinking = el('div', { class: 'answer pending' }, 'Generating answer…');
+  ui.panel.scrollTop = 0;
+  ui.panel.replaceChildren(el('div', { class: 'stream' }, el('p', { class: 'answer-label' }, 'Suggested answer'), thinking));
+  setTimeout(() => {
+    if (id !== renderId) return;
+    const answer = el('div', { class: 'answer' });
+    thinking.replaceWith(answer);
+    const shownT = now();
+    log('answer_shown', { answer_id: answerId, since_question_end_s: +(shownT - questionEndT).toFixed(3) });
+    const tokens = item.answer.split(/(\s+)/);
+    const interval = 1000 / settings.words_per_second;
+    let i = 0;
+    (function step() {
+      if (id !== renderId) return;
+      while (i < tokens.length) { const t = tokens[i++]; answer.append(t); if (/\S/.test(t)) break; }
+      if (i < tokens.length) setTimeout(step, interval);
+      else setPanelStatus('Listening', true);
+    })();
+  }, item.delay_s * 1000);
+}
+
+// Assisted-round briefing only: streams a sample answer the same way, so the
+// volunteer sees where answers appear before the first real one. It logs
+// nothing; the first question's panelListening() replaces it.
+const DEMO_QUESTION = 'Example question: What do you like to do on weekends?';
+const DEMO_ANSWER = 'On weekends I try to balance rest with something active. On Saturday mornings I usually go for a walk or play football with friends, and in the afternoon I catch up on chores. Sundays are slower: I cook something new, call my family, and plan the week ahead so Monday feels less rushed.';
+function panelDemo() {
+  const id = ++renderId;
+  ui.overlay.classList.add('active');
+  setPanelStatus('Example', true);
+  setPanelNote('This is an example. Real suggested answers will appear in the box above after each question.');
+  const answer = el('div', { class: 'answer' });
+  ui.panel.scrollTop = 0;
+  ui.panel.replaceChildren(el('div', { class: 'stream' },
+    el('p', { class: 'answer-label' }, DEMO_QUESTION), el('p', { class: 'answer-label' }, 'Suggested answer'), answer));
+  const tokens = DEMO_ANSWER.split(/(\s+)/);
+  let i = 0;
+  (function step() {
+    if (id !== renderId) return;
+    while (i < tokens.length) { const t = tokens[i++]; answer.append(t); if (/\S/.test(t)) break; }
+    if (i < tokens.length) setTimeout(step, 1000 / settings.words_per_second);
+  })();
+}
+
+// The round briefing (the live protocol's interviewer script, from
+// instructions.json) is read aloud; Start unlocks once it has played.
+function roundIntro(item) {
+  return new Promise(resolve => {
+    const key = 'round_' + item.condition;
+    const start = el('button', { class: 'primary' }, 'Start round ' + item.round);
+    const replay = el('button', { class: 'secondary', onclick: () => narrate(key, [], replay) }, 'Replay instructions');
+    start.onclick = () => { stopNarration(); resolve(); };
+    ui.qLabel.textContent = 'Round ' + item.round + ' of 2';
+    ui.qText.className = 'q-text round';
+    ui.qText.replaceChildren(item.condition === 'assisted' ? 'Use the assistant’s answer for every question in this round.' : 'Answer this round on your own.');
+    ui.state.hidden = true;
+    ui.state.after(ui.script = el('div', { class: 'script' }, ...INSTR[key].split('\n\n').map(p => el('p', {}, p))));
+    setProgress(`Round ${item.round} · Instructions`, cursor);
+    ui.controls.replaceChildren(start, replay, ui.mute, narrationStatus(key, true));
+    if (item.condition === 'assisted') panelDemo(); else panelPaused();
+    narrate(key, [start], replay);
+  });
+}
+
+async function startInterview() {
+  busy = true;
+  // Begin with the session record that make_clips.py and session_report.py expect.
+  const track = stream.getVideoTracks()[0].getSettings();
+  log('session_start', {
+    volunteer_id: session.volunteer_id,
+    settings,
+    plan: plan.map(({ question, answer, ...rest }) => rest),
+    protocol: 'automatic',
+    tts_voice: recorded ? `${recorded.voice} (${recorded.source}, pre-recorded)` : (voice ? voice.name : null),
+    video: { width: track.width, height: track.height, frame_rate: track.frameRate },
+    user_agent: navigator.userAgent,
+  });
+
+  const mime = ['video/webm;codecs=vp8,opus', 'video/webm'].find(m => MediaRecorder.isTypeSupported(m));
+  recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 2_500_000, audioBitsPerSecond: 128_000 });
+  recorder.ondataavailable = e => { if (e.data && e.data.size) queueChunk(e.data); };
+  const started = new Promise(r => { recorder.onstart = () => { log('recording_start', { mime }); r(); }; });
+  recorder.start(4000);
+  await started;
+  // Record a mute chosen before the interview, so every answer's state is known.
+  if (voiceMuted) log('voice_muted', { muted: true });
+  // Likewise the welcome and setup instructions, if they were skipped.
+  skippedBeforeStart.forEach(fields => log('instructions_skipped', fields));
+
+  buildInterview();
+  let lastRound = null;
+  for (cursor = 0; cursor < plan.length; cursor++) {
+    const item = plan[cursor];
+    if (item.round !== lastRound) {
+      lastRound = item.round;
+      await roundIntro(item);
+      log('round_start', { round: item.round, condition: item.condition });
+      await sleep(1500);
+    }
+    await askQuestion(item);
+    await sleep(2000);
+  }
+  await finish();
+}
+
+function askQuestion(item) {
+  return new Promise(resolve => {
+    const base = { round: item.round, condition: item.condition, question_set: item.question_set,
+                   question_num: item.question_num, question_type: item.question_type };
+    const position = plan.filter(p => p.round === item.round).indexOf(item) + 1;
+    setProgress(`Round ${item.round} · Question ${position} of 4`, cursor, cursor);
+    if (ui.script) { ui.script.remove(); ui.script = null; }
+    ui.state.hidden = false;
+    ui.qLabel.textContent = 'Question ' + position;
+    ui.qText.className = 'q-text';
+    ui.qText.textContent = item.question;
+    ui.controls.replaceChildren(ui.done, ui.repeat, ui.hint, ui.mute);
+    if (item.condition === 'assisted') panelListening(); else panelPaused();
+
+    let answering = false, answerStart = 0, remarks = 0, ticker = null;
+
+    async function present() {
+      answering = false;
+      ui.done.disabled = true; ui.repeat.disabled = true;
+      setState('neutral', 'Listening to the question');
+      log('question_start', base);
+      const { fallback, source } = await speak(item.question, `${item.question_set}_q${item.question_num}`);
+      // question_end is the clip start: the moment the question finished.
+      const record = { ...base, remark: remarks > 0, voice: source };
+      if (fallback) record.tts_fallback = true;
+      if (item.condition === 'assisted') {
+        record.answer_id = Math.random().toString(16).slice(2, 12);
+        record.delay_s = item.delay_s;
+      }
+      const qe = log('question_end', record);
+      remarks++;
+      if (item.condition === 'assisted') panelAnswer(item, record.answer_id, qe.t);
+      answering = true;
+      answerStart = performance.now();
+      const timer = el('span', { class: 'timer' }, '0:00');
+      setState('live', item.condition === 'assisted' ? 'Answer now, using the suggested answer above' : 'Answer now', timer);
+      clearInterval(ticker);
+      ticker = setInterval(() => {
+        const s = Math.floor((performance.now() - answerStart) / 1000);
+        timer.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+      }, 250);
+      // A short guard so a double press cannot end an answer by accident.
+      setTimeout(() => { if (answering) ui.done.disabled = false; }, 2000);
+      ui.repeat.disabled = false;
+    }
+
+    function done() {
+      if (!answering || ui.done.disabled) return;
+      answering = false;
+      clearInterval(ticker);
+      document.removeEventListener('keydown', onKey);
+      log('answer_end', base);
+      renderId++;
+      ui.done.disabled = true; ui.repeat.disabled = true;
+      setState('neutral', cursor + 1 < plan.length ? 'Thank you. Next question coming up…' : 'Thank you.');
+      resolve();
+    }
+    function onKey(e) {
+      if (e.code === 'Space' && !e.repeat) { e.preventDefault(); done(); }
+    }
+    ui.done.onclick = done;
+    ui.repeat.onclick = () => { if (answering) { renderId++; clearInterval(ticker); present(); } };
+    document.addEventListener('keydown', onKey);
+    present();
+  });
+}
+
+async function finish() {
+  log('session_end');
+  sessionEnded = true;   // from here, closing the page must not abort (see 'pagehide')
+  setProgress('Finished', plan.length);
+  ui.qLabel.textContent = 'Finished';
+  ui.qText.textContent = 'That was the last question. Thank you!';
+  ui.state.hidden = true;
+  ui.controls.replaceChildren();
+  panelPaused();
+  setPanelNote('');   // nothing left to do with the assistant; the line keeps its height
+  // A short tail keeps the end of the last answer in the recording.
+  await sleep(1500);
+  const stopped = new Promise(r => { recorder.onstop = r; });
+  recorder.stop();
+  await stopped;
+  stream.getTracks().forEach(t => t.stop());
+  log('recording_stop', { chunks: chunkIndex });
+
+  // Spoken only now, after the recorder has stopped, so the voice can never
+  // leak into the last clip.
+  const bar = el('span');
+  const label = el('p', { class: 'label', style: 'flex: 1' }, 'Uploading');
+  const amount = el('p', { class: 'body' });
+  const text = el('p', { class: 'body' }, 'If the connection drops, leave the page open. Sending carries on by itself when it comes back.');
+  show(message(
+    eyebrow('Interview finished'),
+    heading('Sending your recording', 56),
+    ...paras('uploading'),
+    narrationStatus('uploading'),
+    el('div', { class: 'progress' }, el('div', { class: 'row' }, label, amount), el('div', { class: 'meter upload' }, bar)),
+    text));
+  // On a fast connection the upload ends before this message does; the page
+  // waits for both, so the voice is never cut off mid-sentence.
+  const spoken = narrate('uploading');
+  const update = () => {
+    const pct = totalBytes ? uploadedBytes / totalBytes * 100 : 100;
+    bar.style.width = pct + '%';
+    amount.textContent = `${(uploadedBytes / 1e6).toFixed(0)} of ${(totalBytes / 1e6).toFixed(0)} MB`;
+  };
+  onUploadProgress = update;
+  update();
+  while (uploads.length || uploading || pending.length || mirror.length) await sleep(500);
+  for (;;) {
+    try { await receiverPost('finish', JSON.stringify({ chunks: chunkIndex }), 'application/json'); break; }
+    catch { text.textContent = 'Waiting for the researcher’s computer…'; await sleep(3000); }
+  }
+  busy = false;
+  label.textContent = 'Sent';
+  text.textContent = 'All sent.';
+  await spoken;
+  // Shown, not read aloud: it isn't in instructions.json. Wording follows
+  // docs/VOLUNTEER_CONSENT_FORM.md.
+  show(message(
+    eyebrow(`Session ${sessionCode()} · saved`),
+    heading('All done. Thank you!', 64),
+    ...paras('done'),
+    narrationStatus('done'),
+    steps('What happens next', [
+      { text: 'Your video stays on the researcher’s computer. It is never put in cloud storage or a public repository.' },
+      { text: 'Only measurements and a written transcript of your answers are kept for the thesis, under your session code. The video is deleted once the thesis is graded.' },
+      { text: 'You can withdraw within 14 days without giving a reason. Email the researcher with your session code and your recordings are deleted straight away.' },
+    ])));
+  narrate('done');
+}
+
+load();
+</script>
+</body>
+</html>

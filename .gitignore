@@ -6,6 +6,7 @@ data/features.csv
 data/cv_results.csv
 data/ablation_results.csv
 data/oof_predictions.csv
+data/*_all_volunteers.csv
 models/*.json
 models/*.onnx
 
@@ -23,3 +24,24 @@ venv/
 Thumbs.db
 external_data/*/
 !external_data/README.md
+
+# Automatic-interview web app: local installs, dev database, Vercel link
+web/node_modules/
+web/.devdata/
+web/.vercel/
+# Holds the web app's admin key
+assistant_tool/remote_config.json
+# The web app and remote_session.py now live in automated_interview/; the
+# unanchored patterns also cover any other copy of the app.
+node_modules/
+.devdata/
+.vercel/
+remote_config.json
+automated_interview/web/node_modules/
+automated_interview/web/.devdata/
+automated_interview/web/.vercel/
+automated_interview/remote_config.json
+# Local backups of labels.csv (hold participant labels; never commit)
+data/labels.csv.bak*
+# Claude Code worktrees (temporary copies of the repo)
+**/.claude/worktrees/

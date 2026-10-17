@@ -17,7 +17,7 @@ import pandas as pd
 from extract_gaze import extract_gaze_features
 from extract_latency import extract_latency_features
 from extract_linguistic import extract_linguistic_features
-from modeling_utils import FEATURE_COLUMNS
+from modeling_utils import FEATURE_COLUMNS, apply_gaze_exclusions
 from paths_config import FEATURES_PATH, LABELS_PATH, resolve_project_path
 
 OUTPUT_PATH = FEATURES_PATH
@@ -75,7 +75,7 @@ def build_features():
 
     rows = [r for r in (extract_clip_features(row) for _, row in labels_df.iterrows()) if r is not None]
 
-    features_df = pd.DataFrame(rows)
+    features_df = apply_gaze_exclusions(pd.DataFrame(rows))
 
     # Log NaN summary so the user knows which clips/features had extraction failures
     nan_counts = features_df[FEATURE_COLUMNS].isna().sum()

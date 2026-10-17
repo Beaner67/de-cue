@@ -11,9 +11,10 @@ volunteer sessions are checked.
 - Windows. Run `src/` scripts with the project venv (Python 3.12):
   `venv\Scripts\python.exe src\<script>.py` from the project root. The
   system `python` is 3.9 and lacks the pinned ML packages.
-- `assistant_tool/server.py` and `make_clips.py` are stdlib-only and must
-  keep working on Python 3.9: keep `from __future__ import annotations` and
-  avoid 3.10+ syntax at runtime (`match`, `X | Y` outside annotations).
+- `assistant_tool/server.py`, `make_clips.py` and
+  `automated_interview/remote_session.py` are stdlib-only and must keep
+  working on Python 3.9: keep `from __future__ import annotations` and avoid
+  3.10+ syntax at runtime (`match`, `X | Y` outside annotations).
 - Work happens on the `assistant-tool` branch; `main` is the last merged
   state.
 
@@ -29,8 +30,11 @@ python assistant_tool\make_clips.py --volunteer 2 --recording "data\raw\voluntee
 ```
 
 - Each session writes `data/raw/volunteer_XX/session_log.jsonl`. The control
-  panel defaults to the first volunteer number with no session, so each
-  volunteer gets their own folder.
+  panel defaults to the first volunteer number with no session
+  (`server.first_free_volunteer_num()`: no `session_start` in the log and no
+  `data/raw/volunteer_XX/` folder at all; `_archive/` and `_earlier_tests/`
+  never count), so each volunteer gets their own folder. Automatic sessions
+  use the same function.
 - Odd volunteers do unassisted (Set A) first, even ones assisted first.
   Questions within a round follow a Williams order per volunteer pair, and
   answers appear after a per-difficulty delay (easy 0.5 s, medium 1.25 s,
@@ -46,6 +50,82 @@ python assistant_tool\make_clips.py --volunteer 2 --recording "data\raw\voluntee
 - UI changes: control.html and volunteer.html follow the Figma frames in
   `assistant_tool/FIGMA_HANDOFF.md`. Its "Do not change" list (key handling,
   timestamps, element IDs) is behaviour the timing data depends on.
+
+## Automatic sessions (web app)
+
+Everything for automatic sessions is in `automated_interview/`:
+`remote_session.py`, its gitignored `remote_config.json` (admin key: never
+print it), `tools/make_question_audio.py` and the web app in `web/` (Neon
+Postgres via `DATABASE_URL` when deployed on Vercel, admin routes behind
+`ADMIN_KEY`). `server.py`, `answers.json` and `make_clips.py` stay in
+`assistant_tool/` because the live tool shares them; paths come from
+`ASSISTANT_TOOL_DIR`, `AUTOMATED_INTERVIEW_DIR` and `WEB_APP_DIR` in
+`src/paths_config.py`. Sessions run locally only (there is no Vercel
+deployment):
+
+```powershell
+venv\Scripts\python.exe automated_interview\remote_session.py --local                # next free number
+venv\Scripts\python.exe automated_interview\remote_session.py --local --volunteer 10
+venv\Scripts\python.exe automated_interview\remote_session.py --local --volunteer 10 --finalize
+```
+
+It starts `automated_interview/web/dev-server.mjs` on the laptop (cwd `web/`,
+because `lib/db.js` keeps its store in `<cwd>/.devdata/`) with a random admin
+key, opens Cloudflare tunnels to it and to an upload receiver, and finalizes
+into the same `volunteer_XX.mp4` + `session_log.jsonl` that `make_clips.py`
+expects. The auto mode classifier may block starting tunnels; the user has
+asked for them for remote volunteers.
+
+- **Volunteer number.** Without `--volunteer` it takes
+  `server.first_free_volunteer_num()` and prints it, e.g. `Volunteer number:
+  10 (odd: unassisted round first)`. `--finalize` always needs `--volunteer`.
+- **Abandoned sessions are wiped** (the user's choice; the consent form
+  promises deletion on withdrawal). The session counts as abandoned when the
+  page's `pagehide` beacon (`POST /abort` on the receiver, sent only between
+  `session_start` and `session_end`) arrives, or when no chunk or event
+  arrives for `DECUE_IDLE_TIMEOUT_S` (900 s) after the interview began, or for
+  `DECUE_PRESTART_TIMEOUT_S` (3600 s) before. The script then closes the
+  receiver, deletes the session from the store (`/api/admin?action=delete`,
+  file store only), deletes `data/raw/volunteer_XX/`, and exits 0; the number
+  is free again. It never wipes after `session_end` has arrived (a stalled
+  upload prints the `--finalize` advice instead) or on Ctrl+C. Writes are
+  refused under the receiver's lock once it is closed, so a late chunk can't
+  recreate the folder. A connection outage longer than the idle timeout looks
+  like quitting.
+- **Ports.** `DECUE_LOCAL_APP_PORT` (3000) and `DECUE_RECEIVER_PORT` (8767)
+  move them, so a test never takes a live session's ports; the script refuses
+  to start on a busy port.
+
+- **Video must never be stored by the web app or the database.** The consent
+  form promises local-only storage; the browser uploads chunks straight to
+  the laptop. Only plans and timing events go to Neon.
+- The page's events use the same schema as `server.py`'s log, plus
+  `protocol: "automatic"` in `session_start` and extra informational events
+  (`question_start`, `round_start`, `recording_stop`, `voice_muted`,
+  `instructions_skipped`). Keep `make_clips.py` and `session_report.py`
+  working with both protocols.
+- **Skip.** While an instruction is read aloud (welcome, setup, round
+  briefings), Replay becomes "Skip instructions", enabled after 5 s
+  (`SKIP_AFTER_S`, no countdown shown). Questions can't be skipped:
+  `question_end` must stay the moment the question finished playing.
+  `instructions_skipped {instruction, heard_s}` is logged on each skip during
+  the interview; skips on the welcome and setup screens are logged right
+  after `recording_start`, like `voice_muted`.
+- **Mute.** The volunteer can mute the voice (welcome, setup and interview
+  screens). It only sets the volume to 0: recordings still play, so
+  `question_end` and the narration gating are unchanged. The setup's test
+  voice ignores the mute. `voice_muted {muted}` is logged right after
+  `recording_start` if already muted, and on each toggle until `session_end`.
+- The plan comes from `server.build_plan()`; don't duplicate the
+  counterbalancing in JavaScript.
+- Test as volunteer 99 on other ports, e.g. `$env:DECUE_LOCAL_APP_PORT=28766;
+  $env:DECUE_RECEIVER_PORT=28767` then `remote_session.py --volunteer 99
+  --local --no-tunnel --no-clips` (short `DECUE_IDLE_TIMEOUT_S` /
+  `DECUE_PRESTART_TIMEOUT_S` for the wipe paths). **`automated_interview/web/.devdata/db.json`
+  holds real session timings: never delete it.** Before testing, park it
+  outside the project (move the `.devdata` folder away), and afterwards delete
+  the test `.devdata` and `data/raw/volunteer_99/`, restore the real one and
+  check its size and SHA256 are unchanged.
 
 ## Checking a new volunteer session
 
@@ -74,6 +154,15 @@ listen.
 removed with `--drop-standins`. `data/raw/volunteer_01` is a pilot test
 session and is deliberately not in labels.csv.
 
+`data/volunteer_exclusions.csv` excludes volunteer_08, who answered the
+assisted round without looking at the assistant (reported by the
+researcher, 2026-10-13). Their labels match the session log; the
+manipulation failed: 0% of the suggestions' three-word phrases reused,
+against at least 18% for every other volunteer's assisted answers. On
+2026-10-17 the researcher decided to exclude volunteer_08 entirely: the
+thesis reports only runs without them, and no `--include-excluded` run.
+Their rows stay in labels.csv and their raw folder stays on disk.
+
 ## Feature extraction notes
 
 - `extract_latency.py` only counts speech within 30 dB of the clip's loud
@@ -83,6 +172,13 @@ session and is deliberately not in labels.csv.
   misheard accented speech.
 - Changing either one means rerunning Stage 1
   (`pretrain_calibration.py`) before any Stage 2 numbers are compared.
+- Remote volunteers' call video sometimes freezes while audio continues.
+  `session_report.py` detects freezes (ffmpeg `freezedetect`) and lists
+  them per clip. A clip whose gaze is invalid goes in
+  `data/gaze_exclusions.csv`; `apply_gaze_exclusions()` sets its gaze
+  features to NaN in `build_features.py` and the report, so training drops
+  the whole clip. Current rule: exclude only clips frozen for (almost) all
+  of their length; partly frozen clips are kept and stated as a limitation.
 - `saccade_rate` is still unvalidated on webcam clips and may be inflated
   for volunteers wearing glasses; treat it with caution until
   `SACCADE_VELOCITY_THRESHOLD` is checked.

@@ -68,19 +68,21 @@ These questions require **zero programming or technical background**. They are d
 ## 4. Verbal Scripts for Interviewer
 
 ### 4.1 Welcome & Introduction (Read verbatim)
-> *"Hi [Volunteer Name], thank you for joining today! The session takes around 20 to 25 minutes. We will do two short mock interview rounds with 4 questions each. None of these questions require any technical or coding knowledge—they are just everyday situational and opinion questions. Before we begin, please make sure you've signed the consent form. You can pause or stop at any point if you wish."*
+> *"Hi [Volunteer Name], thank you for joining today! A quick word on what this study is about: more and more candidates in online job interviews secretly read their answers from an AI tool while they talk. This project is building a system that can tell the difference between someone answering on their own and someone using AI help, and to build it we need recordings of the same person doing both. The session takes around 20 to 25 minutes. We will do two short mock interview rounds with 4 questions each. None of these questions require any technical or coding knowledge—they are just everyday situational and opinion questions. Please treat this exactly like a real interview: no outside help of any kind is allowed, so no notes, phones, web searches, other AI tools, or anyone helping you. The only help you may use is the assistant tool I give you, and only in the round where it is on. Before we begin, please make sure you've signed the consent form. You can pause or stop at any point if you wish."*
 
 ---
 
 ### 4.2 Before the Unassisted Round
-> *"In this round, you will answer 4 questions purely off the top of your head, just like a casual conversation or job interview. Take a few seconds to think if you need to, and speak at your natural pace. Ready? Let's start with Question 1..."*
+> *"In this round, you will answer 4 questions purely off the top of your head, just like a casual conversation or job interview. Take a few seconds to think if you need to, and speak at your natural pace. No notes, phone, web search, other AI tools, or anyone else's help. Ready? Let's start with Question 1..."*
 
 ---
 
 ### 4.3 Before the Assisted Round (The Covert Game)
-> *"In this round, we are playing a game: you will have an AI assistant tool open on your screen. As I ask each question, the assistant will generate an answer in real-time.*  
+> *"In this round, you will have an AI assistant tool open on your screen. As I ask each question, the assistant will generate a suggested answer in real-time. It takes a moment to appear after each question: you can wait for it, or fill the moment naturally as you would in a real interview.*  
 >  
-> ***Your challenge is to deceive me:*** *try your absolute best to pass as a completely natural, unassisted candidate! You can read the assistant's answer, rephrase it in your own words, or add your own thoughts. Try to maintain natural eye contact and pacing so that anyone watching the video wouldn't guess you're using an AI. Ready? Here is Question 1..."*
+> ***You must use the suggested answer for every question.*** *Read it and give it as your own: you can read it out, put it in your own words, or add a little of your own, but the main points should come from the assistant. Please don't ignore it and answer from your own head; this round only works for the study if you really use it.*  
+>  
+> ***At the same time, your challenge is to deceive me:*** *try your absolute best to pass as a completely natural, unassisted candidate. This assistant is the only help allowed: no notes, phone, other AI tools, or anyone else's help. Try to maintain natural eye contact and pacing so that anyone watching the video wouldn't guess you're using an AI. Ready? Here is Question 1..."*
 
 ---
 

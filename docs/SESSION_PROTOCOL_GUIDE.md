@@ -70,19 +70,21 @@ Each volunteer answers **4 questions per round** (2 behavioral, 2 technical). Th
 ## 4. Verbal Scripts for Interviewer
 
 ### 4.1 Welcome & Introduction (Read verbatim)
-> *"Hi [Volunteer Name], thank you for participating in this research study today. The entire session will take around 25 minutes. We will conduct two short mock interview rounds with 4 questions each. Before we begin, please make sure you have reviewed and signed the consent form. You can stop or take a break at any point."*
+> *"Hi [Volunteer Name], thank you for participating in this research study today. The entire session will take around 25 minutes. We will conduct two short mock interview rounds with 4 questions each. Please treat this exactly like a real interview: no outside help of any kind is allowed, so no notes, phones, web searches, other AI tools, or anyone helping you. The only help you may use is the assistant tool I give you, and only in the round where it is on. Before we begin, please make sure you have reviewed and signed the consent form. You can stop or take a break at any point."*
 
 ---
 
 ### 4.2 Before the Unassisted Round
-> *"In this round, you will answer 4 standard interview questions purely off the top of your head, just like a normal job interview. Speak naturally at your normal pace. If you need a moment to think before speaking, that is completely fine. Ready? Let's start with Question 1..."*
+> *"In this round, you will answer 4 standard interview questions purely off the top of your head, just like a normal job interview. Speak naturally at your normal pace. If you need a moment to think before speaking, that is completely fine. No notes, phone, web search, other AI tools, or anyone else's help. Ready? Let's start with Question 1..."*
 
 ---
 
 ### 4.3 Before the Assisted Round (The Covert Incentive)
-> *"In this round, you will have an AI assistant tool active on your screen. As I ask each question, the assistant will generate an answer in real-time.*  
+> *"In this round, you will have an AI assistant tool active on your screen. As I ask each question, the assistant will generate an answer in real-time. It takes a moment to appear after each question: you can wait for it, or fill the moment naturally as you would in a real interview.*  
 >  
-> ***Your primary objective in this round is to deceive the interviewer:*** *try your best to pass as a completely natural, unassisted candidate. You may read from the assistant, rephrase its points, or blend it with your own words. Maintain normal eye contact and conversational rhythm so that someone reviewing your video wouldn't suspect you are using an AI. Ready? Here comes Question 1..."*
+> ***You must use the suggested answer for every question:*** *read from the assistant, rephrase its points, or blend it with your own words, but the main points should come from the assistant. Don't ignore it and answer from your own head.*  
+>  
+> ***Your other objective in this round is to deceive the interviewer:*** *try your best to pass as a completely natural, unassisted candidate. This assistant is the only help allowed: no notes, phone, other AI tools, or anyone else's help. Maintain normal eye contact and conversational rhythm so that someone reviewing your video wouldn't suspect you are using an AI. Ready? Here comes Question 1..."*
 
 ---
 

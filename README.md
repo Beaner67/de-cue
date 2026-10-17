@@ -180,10 +180,11 @@ python src/build_features.py
 # 5. Train and evaluate with leave-speaker-out CV, then save the final model
 python src/train_model.py
 #    options: --model logreg|xgb  --no-speaker-norm  --permutations 1000  --bootstrap 1000
+#             --include-excluded   (sensitivity run; see "Excluded volunteers" below)
 
 # 6. Feature-group ablation study (for the evaluation chapter)
 python src/evaluate_model.py
-#    options: --permutations N (default 0 = skip)  --bootstrap 1000
+#    options: --permutations N (default 0 = skip)  --bootstrap 1000  --include-excluded
 ```
 
 > **Keep Stage 1 and Stage 2 consistent.** Whenever you change an extractor,
@@ -204,9 +205,26 @@ python src/evaluate_model.py
 | `models/detector.json` | `train_model.py` | Final model trained on all data |
 | `models/detector_meta.json` | `train_model.py` | Feature list, required preprocessing, CV summary |
 | `data/ablation_results.csv` | `evaluate_model.py` | Gaze / latency / linguistic / combined × logreg / xgb, plus the majority-class baseline |
+| `data/*_all_volunteers.csv` | both, with `--include-excluded` | The same results with excluded volunteers kept in (sensitivity analysis) |
 
 All generated files are gitignored because they can be recreated and may
 contain information derived from participants.
+
+`data/gaze_exclusions.csv` is kept by hand: clips whose gaze features are
+invalid (for example, the volunteer's video froze), with a reason for each.
+`build_features.py` sets their gaze features to NaN, so training drops them.
+
+### Excluded volunteers
+
+`data/volunteer_exclusions.csv` (`volunteer_id,reason`) is also kept by hand.
+It lists whole volunteers for whom the protocol failed, such as someone who
+never used the assistant in the assisted round. Their rows stay in
+`labels.csv` and `features.csv`; `train_model.py` and `evaluate_model.py`
+leave them out at load time, and `detector_meta.json` records who was left
+out and why. `--include-excluded` puts them back and writes the results with
+an `_all_volunteers` suffix, without saving a model, so the thesis can report
+both runs. Only exclude a volunteer for a reason observed independently of
+the model's results, never because they scored badly.
 
 ---
 
@@ -277,6 +295,7 @@ de-cue/
 │   ├── SESSION_PROTOCOL_GUIDE.md          # technical session protocol
 │   └── SESSION_PROTOCOL_GUIDE_GENERAL.md  # non-technical session protocol
 ├── models/                      # generated model artifacts (gitignored)
+├── automated_interview/         # automatic sessions: remote_session.py + web app; see automated_interview/web/README.md
 ├── src/
 │   ├── paths_config.py          # all paths; the only file to edit when the drive letter changes
 │   ├── extract_gaze.py          # MediaPipe FaceMesh -> gaze features

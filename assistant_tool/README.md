@@ -29,6 +29,11 @@ difficulty, uses `answer_delay_s` (1.5 s).
 | `answers_technical.json` | The same for the technical track; not read by the tool unless copied over `answers.json` |
 | `make_clips.py` | Cuts the session recording into per-question clips and writes the `labels.csv` rows |
 
+**Automatic** sessions (see below) live in `automated_interview/`:
+`remote_session.py` and the web app in `automated_interview/web/`. They use
+`server.py`, `answers.json` and `make_clips.py` from this folder, so both
+protocols share one question bank and one counterbalancing.
+
 Only Python's standard library is needed, plus `cloudflared` for remote
 sessions (`winget install Cloudflare.cloudflared`) and `ffmpeg` for cutting.
 
@@ -155,6 +160,100 @@ That is the question's configured delay (`delay_s`, logged with each assisted
 the delay per difficulty, and the mean and range of the extra time over
 `delay_s` as the network overhead.
 
+## Automatic sessions
+
+From volunteer 08 on, sessions can run without you reading the questions over
+a call. The web app in `automated_interview/web/` presents each question as
+on-screen text read aloud by a recorded neural voice, records the volunteer's
+webcam and microphone in their browser, and shows the assistant as an overlay
+at the top of the screen in the assisted round, with the same delays and
+streaming as `volunteer.html`. Counterbalancing and question order come from
+the same `build_plan()` as live sessions.
+
+From the project root:
+
+```powershell
+venv\Scripts\python.exe automated_interview\remote_session.py --local
+```
+
+`--local` runs the web app on this laptop and shares it through a Cloudflare
+quick tunnel: no Vercel or database account is needed, and the timings stay
+on this laptop too, in `automated_interview/web/.devdata/`. Sessions are run
+this way only. Needs Node.js and `cloudflared`.
+
+**Volunteer number.** Without `--volunteer`, the script takes the lowest
+number with no session, by the same rule as the control panel: no
+`session_start` in that number's `session_log.jsonl`, and no
+`data/raw/volunteer_XX/` folder in any state (a session in progress or
+waiting for `--finalize` has a folder before it has a log). `_archive/` and
+`_earlier_tests/` never count. It prints the number first, e.g.
+`Volunteer number: 10 (odd: unassisted round first)`. Add `--volunteer N` to
+choose it yourself; a number that already has a session is refused.
+
+1. The script starts the page and an upload receiver, opens a tunnel to each,
+   and prints the volunteer's link (`https://….trycloudflare.com/?s=…`). Send
+   it to the volunteer; it works once. A brand-new tunnel address can take up
+   to a minute to resolve on some networks (this laptop's router included).
+2. The volunteer checks their camera, microphone and sound, then does both
+   rounds on their own. Progress appears in your terminal.
+3. **Keep the laptop on and awake with the script running** until the
+   volunteer's page says "All done". The video uploads to this laptop during
+   the interview; nothing of it is stored on Vercel or in the database.
+4. At the end the script joins the upload into
+   `data/raw/volunteer_XX/volunteer_XX.mp4` (constant 30 fps), rebuilds
+   `session_log.jsonl` from the database, and runs `make_clips.py
+   --update-labels`, which also updates the findings report.
+
+If the laptop or script stops after the volunteer finished, run it again with
+`--finalize` and the volunteer's number, which `--finalize` always needs:
+`venv\Scripts\python.exe automated_interview\remote_session.py --volunteer 10 --local --finalize`
+(with `--local`, the log is rebuilt from the copy the page sent to this
+laptop). The script prints this command whenever it stops early.
+
+**A volunteer who quits partway leaves no trace.** If the volunteer closes or
+reloads the page mid-interview, the session can't continue, so the script
+deletes everything of it: the session's timings in the local store and the
+whole `data/raw/volunteer_XX/` folder, recording included. This matches the
+consent form's promise that recordings are deleted on withdrawal, and the
+number is free again for the next session. The terminal says, e.g.,
+`volunteer_10 quit before finishing (the interview page was closed). All of
+their data was deleted; number 10 is free again.`, and the script exits
+normally. A session counts as abandoned when:
+
+- the page reports it was closed (a beacon sent on `pagehide`, only after
+  the interview began and before its last question was answered; closing the
+  page before **Begin interview** leaves the link working), or
+- nothing (no video chunk, no event) has arrived for 15 minutes after the
+  interview began, or for 60 minutes before it began. While recording, the
+  page uploads every 4 seconds, narrated briefings included, so a running
+  interview never goes quiet that long. A connection outage longer than
+  15 minutes looks the same as quitting.
+
+It is never wiped once the interview's end (`session_end`) has arrived: if
+the upload then stalls for 15 minutes, the script stops, keeps everything,
+and prints the `--finalize` command. **Ctrl+C never deletes anything** either;
+it prints the same advice.
+
+Environment variables (PowerShell: `$env:NAME = "value"`):
+
+| Variable | Default | Effect |
+|---|---|---|
+| `DECUE_IDLE_TIMEOUT_S` | 900 | Silence after the interview began that counts as quitting |
+| `DECUE_PRESTART_TIMEOUT_S` | 3600 | Time allowed before the volunteer begins the interview |
+| `DECUE_LOCAL_APP_PORT` | 3000 | Port of the local interview page |
+| `DECUE_RECEIVER_PORT` | 8767 | Port of the upload receiver |
+
+The ports exist so a test never takes a live session's ports; the script
+refuses to start if either port is already in use.
+
+Differences from live sessions, to state in the thesis: questions come from a
+computer voice instead of the researcher; question end is the exact moment the
+voice finishes (no key-press error); the assistant's answer appears exactly
+after its delay (live sessions had 0.2–1.1 s of network overhead); and the
+webcam is recorded directly (no frozen call video), at up to 1280×720 instead
+of a 1920×1080 screen capture. Each volunteer does both rounds under one
+protocol, and the findings report lists each volunteer's protocol.
+
 ## Testing
 
 Run the tool without `--tunnel` and open both pages on your own computer.
@@ -162,3 +261,7 @@ The volunteer link is shown in the control panel. For a realistic test, run
 with `--tunnel` and have a friend open the link on their own laptop over a
 video call. Use volunteer number 99 for tests, then delete
 `data/raw/volunteer_99/`.
+
+To test an automatic session, see "Testing locally" in
+`automated_interview/web/README.md`. Use other ports and park the real
+`automated_interview/web/.devdata/` first: it holds real session timings.

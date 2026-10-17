@@ -47,6 +47,34 @@ FEATURE_GROUPS = {
     "linguistic_only": ["filler_rate", "speaking_rate", "lexical_diversity", "sentence_complexity"],
 }
 FEATURE_GROUPS["combined"] = [c for cols in FEATURE_GROUPS.values() for c in cols]
+
+
+def load_gaze_exclusions() -> dict:
+    """{clip_id: reason} from data/gaze_exclusions.csv, or {} if the file is absent."""
+    from paths_config import GAZE_EXCLUSIONS_PATH
+    if not GAZE_EXCLUSIONS_PATH.exists():
+        return {}
+    ex = pd.read_csv(GAZE_EXCLUSIONS_PATH, dtype=str).fillna("")
+    return dict(zip(ex["clip_id"].str.strip(), ex["reason"]))
+
+
+def apply_gaze_exclusions(df: pd.DataFrame) -> pd.DataFrame:
+    """Sets the gaze features of excluded clips to NaN. A frozen webcam image
+    gives MediaPipe identical landmarks frame after frame, so fixation
+    stability explodes and blinks/saccades read as zero: values that look
+    valid but describe no behaviour. Marking them NaN (the extractors' own
+    convention for features that can't be computed) keeps them out of
+    training instead of silently skewing the per-speaker centring. The
+    clip's audio-based features are unaffected by a video freeze, but
+    load_feature_table() drops any row with a NaN, so the whole clip leaves
+    the model; that is the documented cost of this rule."""
+    excluded = load_gaze_exclusions()
+    gaze = [c for c in FEATURE_GROUPS["gaze_only"] if c in df.columns]
+    mask = df["clip_id"].isin(excluded)
+    if mask.any():
+        df = df.copy()
+        df.loc[mask, gaze] = np.nan
+    return df
 FEATURE_COLUMNS = FEATURE_GROUPS["combined"]
 
 MODEL_NAMES = ["logreg", "xgb"]
@@ -54,14 +82,36 @@ SPEAKER_COL = "volunteer_id"
 RANDOM_STATE = 42
 
 
-def load_feature_table(path, feature_columns=FEATURE_COLUMNS) -> tuple:
+def load_volunteer_exclusions() -> dict:
+    """{volunteer_id: reason} from data/volunteer_exclusions.csv, or {} if the file is absent."""
+    from paths_config import VOLUNTEER_EXCLUSIONS_PATH
+    if not VOLUNTEER_EXCLUSIONS_PATH.exists():
+        return {}
+    ex = pd.read_csv(VOLUNTEER_EXCLUSIONS_PATH, dtype=str).fillna("")
+    return dict(zip(ex[SPEAKER_COL].str.strip(), ex["reason"]))
+
+
+def load_feature_table(path, feature_columns=FEATURE_COLUMNS, include_excluded: bool = False) -> tuple:
     """
     Reads features.csv and returns (df, active_features):
+      - volunteers listed in volunteer_exclusions.csv are dropped, unless
+        include_excluded (the sensitivity analysis). This happens at load
+        time, not in build_features.py, so switching needs no re-extraction;
       - columns that are NaN for EVERY clip are dropped (structurally
         unavailable, e.g. response_delay without question_end_time);
       - rows with NaN in any remaining feature are dropped (extraction failures).
     """
     df = pd.read_csv(path)
+    excluded = load_volunteer_exclusions()
+    if excluded:
+        if include_excluded:
+            print(f"[Info] Including {len(excluded)} volunteer(s) listed in volunteer_exclusions.csv: {sorted(excluded)}")
+        else:
+            mask = df[SPEAKER_COL].isin(excluded)
+            print(f"[Info] Excluding {df.loc[mask, SPEAKER_COL].nunique()} volunteer(s) ({int(mask.sum())} clips) "
+                  f"listed in volunteer_exclusions.csv: {sorted(excluded)}")
+            df = df[~mask].reset_index(drop=True)
+
     active = [c for c in feature_columns if c in df.columns]
     missing = [c for c in feature_columns if c not in df.columns]
     if missing:
@@ -74,7 +124,7 @@ def load_feature_table(path, feature_columns=FEATURE_COLUMNS) -> tuple:
 
     nan_mask = df[active].isna().any(axis=1)
     if nan_mask.any():
-        print(f"[Warning] Dropping {int(nan_mask.sum())} row(s) with NaN features (failed extraction): {df.loc[nan_mask, 'clip_id'].tolist()}")
+        print(f"[Warning] Dropping {int(nan_mask.sum())} row(s) with NaN features (failed extraction or listed in gaze_exclusions.csv): {df.loc[nan_mask, 'clip_id'].tolist()}")
         df = df[~nan_mask].reset_index(drop=True)
 
     return df, active

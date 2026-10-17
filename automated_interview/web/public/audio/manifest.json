@@ -1,0 +1,81 @@
+{
+ "voice": "en-IN-NeerjaNeural",
+ "source": "edge-tts",
+ "files": {
+  "test": {
+   "file": "test.mp3",
+   "text": "Hello. This is the voice that will read the interview questions.",
+   "duration_s": 4.214
+  },
+  "instr_welcome": {
+   "file": "instr_welcome.mp3",
+   "text": "Welcome to your mock interview, and thank you for helping with this research.\n\nWhat this study is about: more and more candidates in online job interviews secretly read their answers from an AI tool while they talk. This project is building a system that can tell the difference between someone answering on their own and someone using AI help. To build it, we need recordings of the same person doing both, and that is what you will do today.\n\nThe session takes about 15 to 20 minutes, in two short rounds of 4 questions each. In one round, you answer on your own. In the other round, an AI assistant at the top of your screen shows a suggested answer to each question, and you must use it. None of the questions need technical or coding knowledge: they are everyday situational and opinion questions.\n\nEach question appears on the screen and is read aloud. Answer out loud, as you would in a real interview. When you have finished an answer, click Done answering, or press the space bar.\n\nPlease treat this exactly like a real interview. No outside help of any kind is allowed: no notes, phones, web searches, other AI tools, or other people helping you. The only help you may use is the assistant built into this page, and only in the round where it is switched on.\n\nYour camera and microphone record the whole interview, and the recording goes only to the researcher's computer. Please sit in a quiet, well-lit place, keep this window full screen, and keep your face visible to the camera. You can stop at any time by closing this page.\n\nWhen you are ready, click Set up camera and microphone.",
+   "duration_s": 112.304
+  },
+  "instr_setup": {
+   "file": "instr_setup.mp3",
+   "text": "First, let's check your setup. If your browser asks to use your camera and microphone, click Allow. Make sure your face is centred and well lit in the preview. Say a few words, and check that the green bar moves. Then click Play test voice. When all four checks are green, click Begin interview.",
+   "duration_s": 22.004
+  },
+  "instr_round_unassisted": {
+   "file": "instr_round_unassisted.mp3",
+   "text": "In this round, you will answer 4 questions purely off the top of your head, just like a casual conversation or job interview. Take a few seconds to think if you need to, and speak at your natural pace. The assistant at the top of your screen is switched off for this round. Do not use any other help either: no notes, phone, web search, other AI tools, or other people.\n\nWhen you are ready, click Start round.",
+   "duration_s": 29.773
+  },
+  "instr_round_assisted": {
+   "file": "instr_round_assisted.mp3",
+   "text": "In this round, the AI assistant at the top of your screen is switched on. After each question is read out, it writes a suggested answer in the box at the top of your screen, word by word. The answer takes a moment to appear after each question: you can wait for it, or fill the moment naturally as you would in a real interview. You can see an example there now.\n\nYou must use the suggested answer for every question. Look up at the box, read the answer, and give it as your own. You can read it out, put it in your own words, or add a little of your own, but the main points of your answer should come from the assistant. Please don't ignore it and answer only from your own head: this round only works for the study if you really use the assistant.\n\nAt the same time, your challenge is to fool the interviewer. Try your best to look and sound like a natural candidate who isn't getting any help, so that anyone watching the video wouldn't guess you are reading from an AI. This assistant is the only help allowed: do not use notes, your phone, other AI tools, or anyone else's help.\n\nWhen you are ready, click Start round.",
+   "duration_s": 80.035
+  },
+  "instr_uploading": {
+   "file": "instr_uploading.mp3",
+   "text": "That was the last question. Thank you! Your recording is now being sent to the researcher's computer. Please keep this page open until it says you are done.",
+   "duration_s": 11.688
+  },
+  "instr_done": {
+   "file": "instr_done.mp3",
+   "text": "All done. Thank you for taking part! Your interview has been saved, and you can close this page now.",
+   "duration_s": 7.658
+  },
+  "A_q1": {
+   "file": "A_q1.mp3",
+   "text": "Can you tell me about a time you worked on a group project, event, or team task where someone wasn't doing their share of the work? How did you handle that situation?",
+   "duration_s": 10.339
+  },
+  "A_q2": {
+   "file": "A_q2.mp3",
+   "text": "Describe a time when you had multiple assignments, tasks, or deadlines piling up at the same time. How did you prioritize what to do first?",
+   "duration_s": 9.75
+  },
+  "A_q3": {
+   "file": "A_q3.mp3",
+   "text": "In your opinion, what are the biggest advantages and disadvantages of using Artificial Intelligence tools (like ChatGPT) in schools and college education?",
+   "duration_s": 10.17
+  },
+  "A_q4": {
+   "file": "A_q4.mp3",
+   "text": "If someone asked you to explain how cloud storage (like Google Drive or iCloud) works compared to saving files on a USB pen drive, how would you explain it in simple words?",
+   "duration_s": 11.406
+  },
+  "B_q1": {
+   "file": "B_q1.mp3",
+   "text": "Tell me about a situation where something you planned (like a trip, an event, or a project) went completely wrong. How did you adapt and deal with it?",
+   "duration_s": 9.943
+  },
+  "B_q2": {
+   "file": "B_q2.mp3",
+   "text": "Describe an instance where you had to learn a completely new skill, hobby, or subject from scratch. What was your strategy for getting good at it?",
+   "duration_s": 9.89
+  },
+  "B_q3": {
+   "file": "B_q3.mp3",
+   "text": "What do you think are the positive and negative impacts of social media algorithms on how people discover news and spend their daily time?",
+   "duration_s": 8.074
+  },
+  "B_q4": {
+   "file": "B_q4.mp3",
+   "text": "Electric vehicles (EVs) are becoming very popular. What do you see as the main benefits and the main challenges or drawbacks of switching from petrol cars to electric cars?",
+   "duration_s": 11.762
+  }
+ }
+}

@@ -162,10 +162,28 @@ def has_session(num: int) -> bool:
     return log_path.exists() and '"session_start"' in log_path.read_text(encoding="utf-8")
 
 
+def volunteer_num_used(num: int) -> bool:
+    """True if volunteer_NN already has a session, or a folder in any state.
+    A folder without a log still counts: an automatic session in progress, or
+    one waiting for --finalize, has only remote_session.json and chunks, and a
+    new session must never share it. Only data/raw/volunteer_NN is checked, so
+    _archive/ and _earlier_tests/ never count."""
+    return has_session(num) or (Path(VOLUNTEER_RAW_DIR) / f"volunteer_{num:02d}").exists()
+
+
 def used_volunteer_nums() -> list[int]:
-    """Volunteer numbers whose folder already holds a session, so each new
-    session can default to a fresh folder."""
-    return [n for n in range(1, 100) if has_session(n)]
+    """Volunteer numbers already taken, so each new session can default to a
+    fresh folder (the control panel's default and warning use this)."""
+    return [n for n in range(1, 100) if volunteer_num_used(n)]
+
+
+def first_free_volunteer_num() -> int:
+    """The lowest volunteer number with no session: the control panel's
+    default, and remote_session.py's when --volunteer is left out."""
+    num = 1
+    while volunteer_num_used(num):
+        num += 1
+    return num
 
 
 class Session:
