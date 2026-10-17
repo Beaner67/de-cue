@@ -1,0 +1,74 @@
+{
+  "settings": {
+    "answer_delay_s": 1.5,
+    "words_per_second": 15,
+    "delay_by_difficulty": {
+      "easy": 0.5,
+      "medium": 1.25,
+      "hard": 2.0
+    }
+  },
+  "test_answer": "This is a test answer. If you can read this, the assistant is working.\n\nDuring the assisted round, a suggested answer will appear here about a second and a half after the interviewer finishes each question.",
+  "sets": {
+    "A": [
+      {
+        "num": 1,
+        "type": "behavioral",
+        "difficulty": "medium",
+        "question": "Can you tell me about a time you worked on a group project, event, or team task where someone wasn't doing their share of the work? How did you handle that situation?",
+        "answer": "In a group project, one member kept missing meetings and hadn't started his part.\n\n• I messaged him privately to ask if he was okay.\n• He was busy with exams, so we gave him a smaller section.\n• We made a shared checklist so everyone could see progress.\n\nWe finished on time. Talking calmly and privately worked better than blaming him."
+      },
+      {
+        "num": 2,
+        "type": "behavioral",
+        "difficulty": "easy",
+        "question": "Describe a time when you had multiple assignments, tasks, or deadlines piling up at the same time. How did you prioritize what to do first?",
+        "answer": "Last semester I had two assignments and a club event in the same week.\n\n• I listed every task with its deadline and how long it would take.\n• I did the most urgent and important work first.\n• I broke big tasks into small steps so they felt manageable.\n• I asked a friend to help with the event posters.\n\nEverything got done on time. A simple list and asking for help early saved me a lot of stress."
+      },
+      {
+        "num": 3,
+        "type": "opinion",
+        "difficulty": "medium",
+        "question": "In your opinion, what are the biggest advantages and disadvantages of using Artificial Intelligence tools (like ChatGPT) in schools and college education?",
+        "answer": "AI tools like ChatGPT help students, but they have risks.\n\nAdvantages:\n• They explain hard topics simply.\n• They help with ideas and grammar.\n\nDisadvantages:\n• Students may copy instead of learning.\n• They can give wrong information.\n\nAI works best as a study helper, not a replacement for thinking."
+      },
+      {
+        "num": 4,
+        "type": "conceptual",
+        "difficulty": "hard",
+        "question": "If someone asked you to explain how cloud storage (like Google Drive or iCloud) works compared to saving files on a USB pen drive, how would you explain it in simple words?",
+        "answer": "A pen drive is like keeping your files in a small box in your pocket. They are stored inside the drive, so if you lose it, the files are gone.\n\nCloud storage like Google Drive is like a locker in a big, secure building run by a company. Your files travel over the internet to their computers.\n\n• You can open them on any device with internet.\n• The company keeps backups, but you trust them with your data."
+      }
+    ],
+    "B": [
+      {
+        "num": 1,
+        "type": "behavioral",
+        "difficulty": "medium",
+        "question": "Tell me about a situation where something you planned (like a trip, an event, or a project) went completely wrong. How did you adapt and deal with it?",
+        "answer": "Last year my friends and I planned a weekend trip, and on the morning we left, our train was cancelled because of heavy rain.\n\n• We stayed calm and looked for other options.\n• We found a bus a few hours later and booked seats right away.\n• I called the guesthouse so they would keep our rooms.\n\nThe trip was shorter but still fun. It taught me to always have a backup plan and focus on solutions."
+      },
+      {
+        "num": 2,
+        "type": "behavioral",
+        "difficulty": "easy",
+        "question": "Describe an instance where you had to learn a completely new skill, hobby, or subject from scratch. What was your strategy for getting good at it?",
+        "answer": "A couple of years ago I started learning the guitar with no musical background.\n\n• I began with free YouTube lessons and four basic chords.\n• I practised twenty minutes every day.\n• I picked songs I liked, which kept me motivated.\n• A friend who plays corrected my mistakes.\n\nAfter a few months I could play several songs. My strategy is to start small, practise daily and get feedback."
+      },
+      {
+        "num": 3,
+        "type": "opinion",
+        "difficulty": "medium",
+        "question": "What do you think are the positive and negative impacts of social media algorithms on how people discover news and spend their daily time?",
+        "answer": "Social media algorithms show us content based on what we click.\n\nPositive:\n• We quickly find topics we care about.\n• Small creators can reach big audiences.\n\nNegative:\n• We mostly see views we already agree with.\n• Endless feeds keep us scrolling too long.\n\nThe key is balance and a mix of sources."
+      },
+      {
+        "num": 4,
+        "type": "conceptual",
+        "difficulty": "hard",
+        "question": "Electric vehicles (EVs) are becoming very popular. What do you see as the main benefits and the main challenges or drawbacks of switching from petrol cars to electric cars?",
+        "answer": "EVs have clear benefits, but also challenges.\n\nBenefits:\n• No exhaust, so cleaner city air.\n• Charging is much cheaper than petrol.\n\nChallenges:\n• They cost more to buy.\n• Few charging stations outside cities.\n• Charging takes longer than refuelling.\n\nEVs are the future once charging gets easier and prices fall."
+      }
+    ]
+  }
+}

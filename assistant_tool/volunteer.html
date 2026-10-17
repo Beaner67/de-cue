@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interview Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Loaded without blocking: a slow fonts.googleapis.com must never delay polling or the answer timing. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<style id="app-style">
+  /* Always dark: these are the dark values of the Figma "Color" collection. */
+  :root {
+    --bg-body: #0f0f0f;      --bg-surface: #1a1a1a;     --bg-muted: #262626;
+    --text: #ededed;         --text-2: #a3a3a3;         --text-3: #5c5c5c;
+    --border: #2e2e2e;       --border-strong: #404040;
+    --accent: #ededed;       --on-accent: #171717;
+    --success: #5bbf5e;      --success-muted: #16301a;
+    --warn: #e2c15a;         --warn-bg: #33290c;
+    --error: #ff7b86;
+
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+    --space-5: 20px; --space-6: 24px; --space-8: 32px;
+    --radius-sm: 4px; --radius-md: 6px; --radius-card: 8px;
+    --control-h: 32px;
+
+    --font: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; background: var(--bg-surface); color: var(--text); }
+  body { font-family: var(--font); }
+  /* The answer scales with A- / A+; the rest of the window keeps fixed sizes. */
+  #app { display: flex; flex-direction: column; height: 100%; font-size: 16px; }
+
+  header { flex: none; display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--border); }
+  .title { flex: 1; min-width: 0; font-size: 14px; line-height: 20px; font-weight: 600; }
+  .status-wrap { display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: 13px; line-height: 18px; font-weight: 500; color: var(--text-2); }
+  .status { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dot { flex: none; width: 8px; height: 8px; border-radius: 1px; background: var(--text-3); }
+  .dot.live { background: var(--success); }
+  .dot.warn { background: var(--warn); }
+  header button { height: 24px; padding: 0 6px; margin-left: 2px; font: 500 12px/16px var(--font); color: var(--text-2); background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
+  header button:hover { border-color: var(--text-2); }
+  #note { display: none; padding: var(--space-2) var(--space-4); font-size: 13px; line-height: 18px; color: var(--text-2); border-bottom: 1px solid var(--border); }
+
+  main { flex: 1; min-height: 0; overflow-y: auto; padding: var(--space-5); }
+  .center { min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-3); text-align: center; }
+  .intro { min-height: 100%; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: var(--space-3); }
+  .heading { margin: 0; font-size: 18px; line-height: 26px; font-weight: 600; color: var(--text); }
+  .line { margin: 0; font-size: 14px; line-height: 21px; color: var(--text-2); }
+  .listening .line { font-weight: 500; }
+  .small { margin: 0; font-size: 12px; line-height: 16px; color: var(--text-3); }
+  button.primary { height: var(--control-h); padding: 0 10px 0 12px; font: 600 14px/20px var(--font); color: var(--on-accent); background: var(--accent); border: 1px solid var(--accent); border-radius: var(--radius-md); cursor: pointer; }
+  /* Static level mark: bars 8, 16, 24, 12, 20, 10, 6 px */
+  .level { display: flex; align-items: center; gap: var(--space-1); }
+  .level span { width: 4px; border-radius: 1px; background: var(--text-3); }
+  .level span:nth-child(1) { height: 8px; }  .level span:nth-child(2) { height: 16px; }
+  .level span:nth-child(3) { height: 24px; } .level span:nth-child(4) { height: 12px; }
+  .level span:nth-child(5) { height: 20px; } .level span:nth-child(6) { height: 10px; }
+  .level span:nth-child(7) { height: 6px; }
+  .stream { display: flex; flex-direction: column; gap: 14px; max-width: 40em; }
+  .label { margin: 0; font-size: 12px; line-height: 16px; font-weight: 500; color: var(--text-3); }
+  .answer { white-space: pre-wrap; font-size: 1em; line-height: 1.5625; color: var(--text); }
+  .answer.pending { color: var(--text-2); }
+  #more { flex: none; padding: var(--space-2) var(--space-4); border-top: 1px solid var(--border); font-size: 12px; line-height: 16px; font-weight: 500; color: var(--text-2); text-align: center; cursor: pointer; }
+  #moved { min-height: 100%; display: flex; align-items: center; justify-content: center; padding: var(--space-5); font-size: 14px; line-height: 21px; color: var(--text-2); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span class="title">Assistant</span>
+    <span class="status-wrap"><span class="dot" id="dot"></span><span class="status" id="status">Connecting…</span></span>
+    <button id="smaller" title="Smaller text">A−</button>
+    <button id="bigger" title="Bigger text">A+</button>
+  </header>
+  <div id="note"></div>
+  <main id="main"><div class="center"><p class="line">Connecting to the session…</p></div></main>
+  <div id="more" hidden>More below</div>
+</div>
+<div id="moved" hidden>The assistant is open in its floating window.</div>
+
+<script>
+const token = new URLSearchParams(location.search).get('t') || '';
+const app = document.getElementById('app');
+const main = document.getElementById('main');
+const dot = document.getElementById('dot');
+const statusEl = document.getElementById('status');
+const note = document.getElementById('note');
+const more = document.getElementById('more');
+let seq = 0;
+let renderId = 0;
+let fontSize = 16;
+let mode = { assistant_on: false, message: '' };
+// The intro with "Keep on top" stands in for Paused/Listening until the volunteer
+// has dealt with it. Answers always replace it, so none can be missed.
+let introDone = false;
+let showing = 'mode';   // 'mode' or 'answer': what is in the window right now
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function box(cls, ...children) {
+  const e = el('div', cls);
+  e.append(...children);
+  return e;
+}
+
+function setStatus(text, dotClass) {
+  statusEl.textContent = text;
+  dot.className = 'dot' + (dotClass ? ' ' + dotClass : '');
+}
+
+function showNote(text) {
+  note.textContent = text;
+  note.style.display = text ? 'block' : 'none';
+}
+
+function showIntro() {
+  setStatus('Connected', 'live');
+  const pop = el('button', 'primary', 'Keep on top');
+  pop.onclick = popOut;
+  main.replaceChildren(box('intro',
+    el('h1', 'heading', 'Keep this window where you can read it'),
+    el('p', 'line', 'It floats above your call. Put it beside or over the call window, wherever you would glance at notes.'),
+    pop,
+    el('p', 'small', 'Works in Chrome or Edge')));
+}
+
+function showMode() {
+  renderId++;  // cancels any answer still streaming
+  showing = 'mode';
+  if (!introDone) {
+    showIntro();
+    return updateMore();
+  }
+  if (mode.assistant_on) {
+    setStatus('Listening', 'live');
+    const level = el('div', 'level');
+    for (let i = 0; i < 7; i++) level.append(el('span'));
+    main.replaceChildren(box('center listening', level, el('p', 'line', 'Listening for the next question')));
+  } else {
+    setStatus('Paused');
+    main.replaceChildren(box('center', el('h1', 'heading', 'Paused'), el('p', 'line', mode.message || 'The assistant is off.')));
+  }
+  updateMore();
+}
+
+function ack(ev, waitedMs) {
+  fetch('api/ack?t=' + encodeURIComponent(token), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ answer_id: ev.answer_id, waited_ms: waitedMs }),
+  }).catch(() => {});
+}
+
+// The view never scrolls by itself: following the newest words moved the text the
+// volunteer was still reading. When the answer runs past the bottom, a bar says so.
+function updateMore() {
+  more.hidden = main.scrollHeight - main.scrollTop - main.clientHeight <= 4;
+}
+main.addEventListener('scroll', updateMore);
+window.addEventListener('resize', updateMore);
+more.onclick = () => { main.scrollTop += main.clientHeight - 50; };
+
+function renderAnswer(ev) {
+  const id = ++renderId;
+  showing = 'answer';
+  const received = performance.now();
+  main.scrollTop = 0;
+  const thinking = el('div', 'answer pending', 'Generating answer…');
+  main.replaceChildren(box('stream', el('p', 'label', 'Suggested answer'), thinking));
+  updateMore();
+  setStatus('Answering', 'live');
+
+  setTimeout(() => {
+    if (id !== renderId) return;
+    const answer = el('div', 'answer');
+    thinking.replaceWith(answer);
+    ack(ev, performance.now() - received);
+    // Stream word by word, keeping the original spacing and line breaks.
+    const tokens = ev.answer.split(/(\s+)/);
+    const interval = 1000 / ev.words_per_second;
+    let i = 0;
+    (function step() {
+      if (id !== renderId) return;
+      while (i < tokens.length) {
+        const t = tokens[i++];
+        answer.append(t);
+        if (/\S/.test(t)) break;
+      }
+      updateMore();
+      if (i < tokens.length) setTimeout(step, interval);
+      else setStatus('Listening', 'live');
+    })();
+  }, ev.delay_s * 1000);
+}
+
+function handle(ev) {
+  if (ev.type === 'mode') { mode = ev; showMode(); }
+  else if (ev.type === 'answer') renderAnswer(ev);
+}
+
+async function poll() {
+  let failures = 0;
+  while (true) {
+    try {
+      const r = await fetch('api/wait?t=' + encodeURIComponent(token) + '&after=' + seq, { cache: 'no-store' });
+      if (r.status === 403) {
+        setStatus('Invalid link', 'warn');
+        main.replaceChildren(box('center', el('p', 'line', 'This link is not valid. Ask the researcher for the current link.')));
+        return;
+      }
+      if (!r.ok) throw new Error(r.status);
+      const data = await r.json();
+      if (failures) { showNote(''); failures = 0; }
+      for (const ev of data.events) handle(ev);
+      seq = data.seq;
+    } catch (e) {
+      failures++;
+      if (failures >= 2) { setStatus('Reconnecting…', 'warn'); showNote('Connection lost. Reconnecting…'); }
+      await sleep(1500);
+    }
+  }
+}
+
+document.getElementById('bigger').onclick = () => { fontSize = Math.min(28, fontSize + 1); app.style.fontSize = fontSize + 'px'; updateMore(); };
+document.getElementById('smaller').onclick = () => { fontSize = Math.max(12, fontSize - 1); app.style.fontSize = fontSize + 'px'; updateMore(); };
+
+// "Keep on top": Document Picture-in-Picture (Chrome and Edge 116+) gives a
+// small always-on-top window, like the overlay of a real assistant app.
+const moved = document.getElementById('moved');
+async function popOut() {
+  if (!('documentPictureInPicture' in window)) {
+    introDone = true;
+    showNote('"Keep on top" needs Chrome or Edge. Instead, place this window next to the video call.');
+    if (showing === 'mode') showMode();
+    return;
+  }
+  const pip = await documentPictureInPicture.requestWindow({ width: 380, height: 480 });
+  pip.document.title = 'Interview Assistant';
+  document.querySelectorAll('link[rel="stylesheet"]').forEach(l => pip.document.head.append(l.cloneNode()));
+  pip.document.head.append(document.getElementById('app-style').cloneNode(true));
+  pip.document.body.append(app);
+  moved.hidden = false;
+  introDone = true;
+  if (showing === 'mode') showMode();
+  updateMore();
+  pip.addEventListener('resize', updateMore);
+  pip.addEventListener('pagehide', () => {
+    moved.hidden = true;
+    document.body.prepend(app);
+    introDone = false;  // offer "Keep on top" again
+    if (showing === 'mode') showMode();
+    updateMore();
+  });
+}
+
+poll();
+</script>
+</body>
+</html>

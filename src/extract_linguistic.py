@@ -40,6 +40,12 @@ _FILLER_RE = re.compile(r"\b(?:" + "|".join(FILLER_PATTERNS) + r")\b")
 # function both stages call.
 VERBATIM_PROMPT = "Umm, so, uh, I mean, like, you know... hmm, let me think. Er, okay."
 
+# "small" rather than "base": on the first pilot recordings (Indian-English speech
+# over a video call) base garbled words ("Geathers" for "guitar"), which distorts
+# every transcript-based feature. Like the prompt, Stage 1 and Stage 2 must use the
+# same model, so changing it means rerunning pretrain_calibration.py.
+WHISPER_MODEL = "small"
+
 _model = None
 
 
@@ -47,7 +53,7 @@ def _get_model():
     """Lazy-load the Whisper model once, reused across calls."""
     global _model
     if _model is None:
-        _model = whisper.load_model("base")  # swap to "small"/"medium" if accuracy is too low
+        _model = whisper.load_model(WHISPER_MODEL)
     return _model
 
 

@@ -78,8 +78,8 @@ The detector uses 12 features in three groups. Every extractor returns
 | Group | Script | Features | Method |
 |---|---|---|---|
 | **Gaze** | `extract_gaze.py` | `fixation_stability`, `saccade_rate`, `offcam_deviation`, `blink_rate` | MediaPipe FaceMesh iris tracking, measured relative to the eye corners (cancels head movement and resolution). Uses a fixed-threshold saccade detector and EAR-based blink detection. |
-| **Latency** | `extract_latency.py` | `response_delay`, `pause_rate`, `avg_pause_length`, `pause_variance` | WebRTC VAD on 30 ms chunks of 16 kHz mono audio. Pause rate is per minute. |
-| **Linguistic** | `extract_linguistic.py` | `filler_rate`, `speaking_rate`, `lexical_diversity`, `sentence_complexity` | Whisper transcription with a verbatim prompt so fillers are kept. Fillers are matched as whole words. |
+| **Latency** | `extract_latency.py` | `response_delay`, `pause_rate`, `avg_pause_length`, `pause_variance` | WebRTC VAD on 30 ms chunks of 16 kHz mono audio. A chunk only counts as speech if it is also within 30 dB of the clip's loud level, so faint breathing and clicks are ignored; the answer starts at the first speech run of at least 0.3 s. Pause rate is per minute. |
+| **Linguistic** | `extract_linguistic.py` | `filler_rate`, `speaking_rate`, `lexical_diversity`, `sentence_complexity` | Whisper `small` transcription with a verbatim prompt so fillers are kept. Fillers are matched as whole words. |
 
 ---
 
@@ -127,6 +127,8 @@ even when it isn't on `PATH` yet.
 `src/paths_config.py` checks the local `external_data/` folder first. If a
 dataset isn't there, it falls back to the external drive set by
 `EXTERNAL_DRIVE_ROOT`. **If the drive letter changes, edit that one line.**
+See [external_data/README.md](external_data/README.md) for file counts and
+the privacy notice for the Real-life Trial footage.
 
 To export Svarah as WAV files from the Hugging Face parquet cache:
 
@@ -178,10 +180,11 @@ python src/build_features.py
 # 5. Train and evaluate with leave-speaker-out CV, then save the final model
 python src/train_model.py
 #    options: --model logreg|xgb  --no-speaker-norm  --permutations 1000  --bootstrap 1000
+#             --include-excluded   (sensitivity run; see "Excluded volunteers" below)
 
 # 6. Feature-group ablation study (for the evaluation chapter)
 python src/evaluate_model.py
-#    options: --permutations N (default 0 = skip)  --bootstrap 1000
+#    options: --permutations N (default 0 = skip)  --bootstrap 1000  --include-excluded
 ```
 
 > **Keep Stage 1 and Stage 2 consistent.** Whenever you change an extractor,
@@ -202,9 +205,26 @@ python src/evaluate_model.py
 | `models/detector.json` | `train_model.py` | Final model trained on all data |
 | `models/detector_meta.json` | `train_model.py` | Feature list, required preprocessing, CV summary |
 | `data/ablation_results.csv` | `evaluate_model.py` | Gaze / latency / linguistic / combined × logreg / xgb, plus the majority-class baseline |
+| `data/*_all_volunteers.csv` | both, with `--include-excluded` | The same results with excluded volunteers kept in (sensitivity analysis) |
 
 All generated files are gitignored because they can be recreated and may
 contain information derived from participants.
+
+`data/gaze_exclusions.csv` is kept by hand: clips whose gaze features are
+invalid (for example, the volunteer's video froze), with a reason for each.
+`build_features.py` sets their gaze features to NaN, so training drops them.
+
+### Excluded volunteers
+
+`data/volunteer_exclusions.csv` (`volunteer_id,reason`) is also kept by hand.
+It lists whole volunteers for whom the protocol failed, such as someone who
+never used the assistant in the assisted round. Their rows stay in
+`labels.csv` and `features.csv`; `train_model.py` and `evaluate_model.py`
+leave them out at load time, and `detector_meta.json` records who was left
+out and why. `--include-excluded` puts them back and writes the results with
+an `_all_volunteers` suffix, without saving a model, so the thesis can report
+both runs. Only exclude a volunteer for a reason observed independently of
+the model's results, never because they scored badly.
 
 ---
 
@@ -275,6 +295,7 @@ de-cue/
 │   ├── SESSION_PROTOCOL_GUIDE.md          # technical session protocol
 │   └── SESSION_PROTOCOL_GUIDE_GENERAL.md  # non-technical session protocol
 ├── models/                      # generated model artifacts (gitignored)
+├── automated_interview/         # automatic sessions: remote_session.py + web app; see automated_interview/web/README.md
 ├── src/
 │   ├── paths_config.py          # all paths; the only file to edit when the drive letter changes
 │   ├── extract_gaze.py          # MediaPipe FaceMesh -> gaze features
@@ -283,10 +304,12 @@ de-cue/
 │   ├── baseline_utils.py        # Stage 1 z-scoring helper
 │   ├── pretrain_calibration.py  # Stage 1: population reference stats
 │   ├── build_features.py        # Stage 2: master feature table
+│   ├── session_report.py        # per-session checks -> docs/VOLUNTEER_DATA_FINDINGS.md
 │   ├── modeling_utils.py        # shared CV, speaker centering, metrics, CIs, permutation test
 │   ├── train_model.py           # leave-speaker-out CV + final model export
 │   ├── evaluate_model.py        # feature-group ablation study
 │   └── download_svarah.py       # Svarah parquet -> WAV export
+├── AGENTS.md                    # instructions for AI coding assistants
 ├── requirements.txt
 └── README.md
 ```

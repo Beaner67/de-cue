@@ -1,0 +1,74 @@
+{
+  "settings": {
+    "answer_delay_s": 1.5,
+    "words_per_second": 15,
+    "delay_by_difficulty": {
+      "easy": 0.5,
+      "medium": 1,
+      "hard": 1.5
+    }
+  },
+  "test_answer": "This is a test answer. If you can read this, the assistant is working.\n\nDuring the assisted round, a suggested answer will appear here about a second and a half after the interviewer finishes each question.",
+  "sets": {
+    "A": [
+      {
+        "num": 1,
+        "type": "behavioral",
+        "difficulty": "medium",
+        "question": "Can you tell me about a time you had to work under a tight deadline with incomplete requirements? How did you prioritize what to build first?",
+        "answer": "In my third-year group project, we had two weeks to build a library management web app, but the requirements from our faculty were only half written.\n\n• First, I listed every feature we were sure about and asked our guide to confirm the top three: book search, issue and return, and login.\n• We built those as a working core in the first week, and treated reports and fines as optional.\n• I kept a shared list of open questions and got them answered at our weekly check-in instead of guessing.\n• When the missing requirements came in, most of them fit on top of the core without rework.\n\nWe delivered on time. The lesson I took was to build the part you're certain about first, and make the unknowns explicit early."
+      },
+      {
+        "num": 2,
+        "type": "behavioral",
+        "difficulty": "easy",
+        "question": "Describe a situation where you had a technical disagreement with a teammate or peer. How did you communicate your perspective and resolve it?",
+        "answer": "During a mini project, a teammate wanted to store everything in one big JSON file, and I thought we needed a proper database.\n\n• Instead of arguing, I suggested we list what the app actually had to do: several users editing at once, and searching records.\n• I built a quick test showing the JSON file got corrupted when two people saved at the same time.\n• He pointed out that setup time mattered to him, which was fair, so we chose SQLite: a real database with almost no setup.\n• We wrote the decision in our README so nobody reopened it later.\n\nWhat I learned is to argue with evidence and requirements, not opinions, and to take the other person's concern seriously. His point about simplicity shaped the final choice."
+      },
+      {
+        "num": 3,
+        "type": "technical",
+        "difficulty": "medium",
+        "question": "Can you explain the key differences between SQL (relational) and NoSQL databases, and what factors guide your decision to choose one over the other in a system architecture?",
+        "answer": "SQL databases store data in tables with a fixed schema and relationships between them, and they give strong ACID guarantees. Examples are PostgreSQL and MySQL.\n\nNoSQL is a family of databases: document stores like MongoDB, key-value stores like Redis, wide-column stores like Cassandra, and graph databases. They have flexible schemas and are usually designed to scale horizontally.\n\nHow I'd choose:\n• Structured data with many relationships and transactions, like payments or orders: SQL.\n• Semi-structured or fast-changing data, very high write volume, or simple lookups at huge scale: NoSQL.\n• Consistency: SQL gives strong consistency by default, while many NoSQL systems trade some of it for availability and speed.\n\nIn practice many systems use both, for example PostgreSQL as the main store and Redis as a cache."
+      },
+      {
+        "num": 4,
+        "type": "technical",
+        "difficulty": "hard",
+        "question": "What is the difference between concurrency and parallelism, and how does Python's Global Interpreter Lock (GIL) affect them in CPU-bound vs. I/O-bound tasks?",
+        "answer": "Concurrency means handling multiple tasks at once by interleaving them. Parallelism means actually running multiple tasks at the same instant on multiple CPU cores.\n\nIn CPython, the Global Interpreter Lock lets only one thread execute Python bytecode at a time.\n\n• I/O-bound tasks, like network calls or file reads: threads still help a lot, because a thread releases the GIL while it waits for I/O. Threading or asyncio works well here.\n• CPU-bound tasks, like heavy calculations: threads don't speed things up, because they take turns holding the GIL. You use multiprocessing instead, where each process has its own interpreter and its own GIL, or libraries like NumPy that release the GIL inside their C code.\n\nNewer Python versions also offer an optional free-threaded build without the GIL, but it isn't the default yet."
+      }
+    ],
+    "B": [
+      {
+        "num": 1,
+        "type": "behavioral",
+        "difficulty": "medium",
+        "question": "Tell me about a complex project where something went critically wrong in production or testing. How did you diagnose the root cause and handle it?",
+        "answer": "In a hackathon project, our app worked perfectly on our laptops but kept crashing on the demo server an hour before judging.\n\n• First I checked the server logs instead of guessing. The error was the app running out of database connections.\n• I reproduced it locally by sending many requests at once, and saw that every request opened a new connection and never closed it.\n• The fix was to use a connection pool and close connections properly. We tested it under load and redeployed.\n• Afterwards, I added a simple load test to our checklist before any demo.\n\nThe main lesson was to trust the logs and reproduce the problem first. Once we could reproduce it on demand, the fix took about twenty minutes."
+      },
+      {
+        "num": 2,
+        "type": "behavioral",
+        "difficulty": "easy",
+        "question": "Can you describe an instance where you had to quickly learn an unfamiliar technology, language, or framework to complete an assignment? What was your learning strategy?",
+        "answer": "For an internship task, I had to build a small dashboard in React, and I had only used plain HTML and JavaScript before. I had about ten days.\n\n• I started with the official React tutorial rather than random videos, just enough to understand components, props and state.\n• On day two I built the smallest possible version of the real task, so I was learning on the actual problem.\n• Whenever I got stuck, I read the documentation for that one concept and looked at how an open-source dashboard handled it.\n• I kept notes of my mistakes, like forgetting keys in lists, so I didn't repeat them.\n\nI finished on time. My strategy now is always the same: learn the core concepts quickly, build something real immediately, and fill in the gaps as they come up."
+      },
+      {
+        "num": 3,
+        "type": "technical",
+        "difficulty": "hard",
+        "question": "Can you explain what happens under the hood when a user types a URL (like https://example.com) into a browser and presses Enter, from DNS lookup to DOM rendering?",
+        "answer": "1. The browser parses the URL and checks its cache. DNS resolution then turns example.com into an IP address, checking the browser cache, the OS cache, and then a DNS resolver.\n2. The browser opens a TCP connection to that IP on port 443 and does a TLS handshake, which sets up encryption and verifies the server's certificate.\n3. It sends an HTTP GET request. The server, often behind a load balancer or CDN, returns a response containing HTML.\n4. The browser parses the HTML into the DOM and the CSS into the CSSOM, and requests other resources like scripts, stylesheets and images.\n5. JavaScript runs and can change the DOM.\n6. The DOM and CSSOM combine into a render tree. The browser then does layout, paint and compositing to draw the page on screen."
+      },
+      {
+        "num": 4,
+        "type": "technical",
+        "difficulty": "medium",
+        "question": "Explain the concept of containerization using Docker versus traditional virtual machines (VMs). What are the advantages and security trade-offs?",
+        "answer": "A virtual machine runs a full guest operating system on a hypervisor, so each VM has its own kernel. A Docker container shares the host's kernel and packages only the application and its dependencies, isolated with namespaces and cgroups.\n\nAdvantages of containers:\n• Much lighter and faster to start: seconds instead of minutes.\n• The same environment from development to production.\n• Many more containers than VMs fit on the same server.\n\nSecurity trade-offs:\n• VMs isolate more strongly, because a kernel exploit inside a container can affect the host and other containers.\n• Containers running as root or with extra privileges are risky.\n• Mitigations: run as a non-root user, use minimal base images, scan images, and apply seccomp or AppArmor profiles.\n\nFor untrusted multi-tenant workloads, teams often run containers inside VMs to get both."
+      }
+    ]
+  }
+}

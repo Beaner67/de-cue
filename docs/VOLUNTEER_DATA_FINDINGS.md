@@ -1,0 +1,283 @@
+# Volunteer Data Findings
+
+**Study:** De-Cue: Detecting Covert Real-Time AI Assistance in Video Interviews<br>
+**Data covered:** 16 volunteer sessions (2026-10-02 to 2026-10-17), 128 clips<br>
+**Last updated:** 2026-10-17 15:03, by `src/session_report.py`
+
+> Sections 1–4 are regenerated after every session (`make_clips.py` runs the report), so edits to them are overwritten. Write interpretation in the sections after the end marker.
+
+---
+
+## 1. Summary
+
+- **Session checks raised flags:** V01: not in labels.csv, saccade_rate 2.1× the others (glasses?); V02: 12 Back presses; last marks used, saccade_rate 10.9× the others (glasses?); V04: saccade_rate 2.1× the others (glasses?); V05: 4 Back presses; last marks used, video frozen in assisted_q4 47% (review; gaze may be invalid), saccade_rate 5.2× the others (glasses?); V06: 1 Back press; last marks used, video frozen in unassisted_q3 58% (review; gaze may be invalid), gaze excluded: unassisted_q4, saccade_rate 5.9× the others (glasses?); V12: saccade_rate 2.9× the others (glasses?).
+- **1 of 12 features changed in the same direction for all 16 volunteers when the assistant was used:** `lexical_diversity` (↑ more varied).
+- Round order: 7 of 16 volunteers did the assisted round first and 9 the unassisted round first. An effect that holds in both orders is not explained by fatigue or practice.
+- **Split evenly between volunteers:** `speaking_rate`.
+- With 16 speakers and 64 paired answers, these are directional observations, not statistically tested results.
+
+---
+
+## 2. Dataset
+
+| Volunteer | Date | Protocol | Round order | Clips | In labels.csv | Flags |
+| --- | --- | --- | --- | --- | --- | --- |
+| V01 | 2026-10-02 | live | Unassisted → Assisted | 8 | no | not in labels.csv; saccade_rate 2.1× the others (glasses?) |
+| V02 | 2026-10-02 | live | Assisted → Unassisted | 8 | yes | 12 Back presses; last marks used; saccade_rate 10.9× the others (glasses?) |
+| V03 | 2026-10-03 | live | Unassisted → Assisted | 8 | yes | — |
+| V04 | 2026-10-03 | live | Assisted → Unassisted | 8 | yes | saccade_rate 2.1× the others (glasses?) |
+| V05 | 2026-10-09 | live | Unassisted → Assisted | 8 | yes | 4 Back presses; last marks used; video frozen in assisted_q4 47% (review; gaze may be invalid); saccade_rate 5.2× the others (glasses?) |
+| V06 | 2026-10-09 | live | Assisted → Unassisted | 8 | yes | 1 Back press; last marks used; video frozen in unassisted_q3 58% (review; gaze may be invalid); gaze excluded: unassisted_q4; saccade_rate 5.9× the others (glasses?) |
+| V07 | 2026-10-09 | live | Unassisted → Assisted | 8 | yes | — |
+| V08 | 2026-10-09 | automatic | Unassisted → Assisted | 8 | yes | — |
+| V09 | 2026-10-10 | automatic | Unassisted → Assisted | 8 | yes | — |
+| V10 | 2026-10-10 | automatic | Assisted → Unassisted | 8 | yes | — |
+| V11 | 2026-10-17 | automatic | Unassisted → Assisted | 8 | yes | — |
+| V12 | 2026-10-17 | automatic | Assisted → Unassisted | 8 | yes | saccade_rate 2.9× the others (glasses?) |
+| V13 | 2026-10-17 | automatic | Unassisted → Assisted | 8 | yes | — |
+| V14 | 2026-10-17 | automatic | Assisted → Unassisted | 8 | yes | — |
+| V15 | 2026-10-17 | automatic | Unassisted → Assisted | 8 | yes | — |
+| V16 | 2026-10-17 | automatic | Assisted → Unassisted | 8 | yes | — |
+
+- **Design:** within-subjects. Each volunteer answers 4 questions unassisted (Set A) and 4 with the Wizard-of-Oz assistant (Set B). Each round has 2 behavioural, 1 opinion and 1 conceptual question.
+- **Counterbalancing:** odd-numbered volunteers do the unassisted round first and even-numbered ones the assisted round first. Question order within a round follows a Williams design per volunteer pair.
+- **Clips** start at the end of the question and end at the end of the answer.
+- **Protocol:** *live* = the researcher read the questions over a video call, recorded with OBS; *automatic* = the web app presented the questions (on-screen text read by the browser's voice) and the browser recorded the webcam. Each volunteer did both rounds under one protocol, so the within-speaker comparisons are not mixed, but gaze values differ in scale between protocols (camera and resolution).
+
+---
+
+## 3. Session Quality Checks
+
+### 3.1 Audio and recording alignment
+
+| Volunteer | Mean / max volume | Recording length | Log span (recording start → session end) | Difference |
+| --- | --- | --- | --- | --- |
+| V01 | -23.1 / -0.3 dB | 409.0 s | 405.1 s | +3.9 s |
+| V02 | -22.9 / -0.2 dB | 1042.4 s | 1025.5 s | +16.9 s |
+| V03 | -21.5 / -0.0 dB | 390.9 s | 383.9 s | +7.0 s |
+| V04 | -22.0 / -0.1 dB | 333.3 s | 329.7 s | +3.6 s |
+| V05 | -22.9 / -0.2 dB | 1101.0 s | 1099.7 s | +1.4 s |
+| V06 | -22.9 / -0.2 dB | 496.5 s | 488.2 s | +8.2 s |
+| V07 | -25.4 / -0.4 dB | 488.1 s | 477.7 s | +10.5 s |
+| V08 | -23.0 / -0.0 dB | 410.9 s | 409.3 s | +1.6 s |
+| V09 | -22.2 / -0.0 dB | 1166.5 s | 1164.8 s | +1.6 s |
+| V10 | -22.7 / -0.4 dB | 772.8 s | 771.2 s | +1.6 s |
+| V11 | -24.8 / -0.1 dB | 776.7 s | 775.1 s | +1.6 s |
+| V12 | -23.5 / -0.5 dB | 399.6 s | 398.0 s | +1.6 s |
+| V13 | -26.8 / -0.5 dB | 397.6 s | 396.0 s | +1.6 s |
+| V14 | -23.5 / -0.4 dB | 493.6 s | 492.1 s | +1.6 s |
+| V15 | -22.5 / -0.5 dB | 460.9 s | 459.3 s | +1.6 s |
+| V16 | -22.4 / -0.4 dB | 480.4 s | 478.8 s | +1.6 s |
+
+A max volume below -60 dB would mean OBS recorded silence. The difference should be a few seconds: the time between the session ending and OBS being stopped.
+
+### 3.2 Log completeness
+
+| Volunteer | Planned questions | Complete | Missing | Back presses |
+| --- | --- | --- | --- | --- |
+| V01 | 8 | 8 | — | 0 |
+| V02 | 8 | 8 | — | 12 |
+| V03 | 8 | 8 | — | 0 |
+| V04 | 8 | 8 | — | 0 |
+| V05 | 8 | 8 | — | 4 |
+| V06 | 8 | 8 | — | 1 |
+| V07 | 8 | 8 | — | 0 |
+| V08 | 8 | 8 | — | 0 |
+| V09 | 8 | 8 | — | 0 |
+| V10 | 8 | 8 | — | 0 |
+| V11 | 8 | 8 | — | 0 |
+| V12 | 8 | 8 | — | 0 |
+| V13 | 8 | 8 | — | 0 |
+| V14 | 8 | 8 | — | 0 |
+| V15 | 8 | 8 | — | 0 |
+| V16 | 8 | 8 | — | 0 |
+
+After a Back press the clips use the last marks for each question.
+
+### 3.3 When the assistant's answer appeared
+
+| Difficulty | Configured delay | Observed delay (range) | Answers |
+| --- | --- | --- | --- |
+| Easy | 0.50 s | 0.50–1.00 s | 16 |
+| Medium | 1.25 s | 1.25–1.81 s | 32 |
+| Hard | 2.00 s | 2.00–3.06 s | 16 |
+
+Observed delays are 0.0–1.1 s longer than configured (client and network overhead). This matters when reading `response_delay`.
+
+### 3.4 Answer length
+
+Mean time from `question_end` to `answer_end`, over the questions in each round.
+
+| Volunteer | Unassisted | Assisted |
+| --- | --- | --- |
+| V01 | 37.2 s | 40.6 s |
+| V02 | 30.1 s | 29.9 s |
+| V03 | 28.9 s | 37.3 s |
+| V04 | 22.8 s | 29.3 s |
+| V05 | 101.0 s | 38.0 s |
+| V06 | 35.0 s | 29.7 s |
+| V07 | 50.0 s | 31.8 s |
+| V08 | 29.6 s | 28.6 s |
+| V09 | 125.9 s | 98.3 s |
+| V10 | 106.0 s | 32.9 s |
+| V11 | 37.9 s | 45.5 s |
+| V12 | 36.1 s | 26.4 s |
+| V13 | 17.7 s | 32.4 s |
+| V14 | 41.8 s | 34.1 s |
+| V15 | 32.0 s | 39.8 s |
+| V16 | 34.2 s | 27.4 s |
+
+### 3.5 Feature extraction
+
+- 128 clips, 12 features, no missing values apart from the gaze exclusions below.
+- Features come from `build_features.extract_clip_features()`, the same code that builds the training table, and are cached per volunteer in `data/raw/volunteer_XX/trial_features.csv`.
+- Gaze features are raw values: the Stage 1 gaze baseline is flagged as a domain mismatch, so z-scoring is skipped for that group. They can be compared within a speaker, not across speakers.
+- 1 clip(s) are listed in `data/gaze_exclusions.csv`. Their gaze features are treated as missing here, and training drops those clips (see Section 3.6).
+
+### 3.6 Frozen video
+
+Freezes of 3 s or longer, detected on each full recording and mapped onto the clips. Audio keeps recording during a freeze, so only the gaze features are affected.
+
+| Clip | Frozen | Share of clip | Gaze excluded |
+| --- | --- | --- | --- |
+| v01_unassisted_q4 | 3.2 s | 5% | no |
+| v05_assisted_q4 | 22.8 s | 47% | no |
+| v06_unassisted_q3 | 17.5 s | 58% | no |
+| v06_unassisted_q4 | 34.4 s | 100% | yes (whole clip frozen; audio intact) |
+
+Clips with gaze excluded are dropped from training. Partly frozen clips that are kept have gaze values averaged over some still frames; state this as a limitation.
+
+---
+
+## 4. Results: Assisted vs Unassisted
+
+### 4.1 Method
+
+- Each assisted answer is paired with the same volunteer's unassisted answer to the question with the same number (64 pairs).
+- The **difference** is the assisted value minus the unassisted value.
+- The **standardised effect** divides each volunteer's mean difference by that volunteer's own standard deviation for the feature, then averages over volunteers. This compares each person with themselves, in line with the per-speaker centring used in the model.
+
+### 4.2 Overview
+
+| Group | Feature | Direction when assisted | Volunteers ↑ / ↓ | Pairs where assisted was higher | Standardised effect |
+| --- | --- | --- | --- | --- | --- |
+| Gaze | fixation_stability | ↑ steadier gaze (mostly) | 14 / 2 | 50 / 63 | +0.91 |
+| Gaze | saccade_rate | ↓ lower (mostly) | 4 / 12 | 12 / 63 | -0.86 |
+| Gaze | offcam_deviation | ↓ more on-camera (mostly) | 2 / 14 | 11 / 63 | -1.09 |
+| Gaze | blink_rate | ↓ fewer blinks (mostly) | 2 / 14 | 14 / 63 | -1.10 |
+| Latency | response_delay | ↑ higher (mostly) | 12 / 4 | 45 / 64 | +0.62 |
+| Latency | pause_rate | ↓ lower (mostly) | 7 / 9 | 31 / 64 | -0.13 |
+| Latency | avg_pause_length | ↑ higher (mostly) | 10 / 6 | 37 / 64 | +0.14 |
+| Latency | pause_variance | ↑ higher (mostly) | 11 / 5 | 34 / 64 | +0.33 |
+| Linguistic | filler_rate | ↓ fewer fillers (mostly) | 4 / 12 | 17 / 64 | -0.43 |
+| Linguistic | speaking_rate | mixed | 8 / 8 | 32 / 64 | +0.15 |
+| Linguistic | lexical_diversity | **↑ more varied** | 16 / 0 | 52 / 64 | +1.06 |
+| Linguistic | sentence_complexity | ↓ lower (mostly) | 3 / 13 | 19 / 64 | -0.80 |
+
+**Bold** marks the features where every volunteer moved in the same direction.
+
+### 4.3 Mean difference per volunteer (assisted − unassisted)
+
+| Feature | V01 | V02 | V03 | V04 | V05 | V06 | V07 | V08 | V09 | V10 | V11 | V12 | V13 | V14 | V15 | V16 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| fixation_stability | +841.99 | +487.75 | +986.14 | +1598.07 | +392.77 | +2127.76 | +3337.10 | -645.05 | +69.30 | +588.21 | +182.80 | +877.12 | +4077.69 | +50.89 | -1208.22 | +19.36 |
+| saccade_rate | -0.45 | +1.24 | -0.40 | -0.64 | -2.67 | -1.81 | -0.77 | +0.02 | -0.10 | +0.01 | -0.12 | -1.34 | -0.53 | -0.35 | +0.11 | -0.25 |
+| offcam_deviation | -0.02 | -0.01 | -0.01 | -0.03 | -0.04 | -0.04 | -0.04 | +0.01 | -0.00 | -0.00 | -0.01 | -0.02 | -0.01 | -0.01 | +0.01 | -0.00 |
+| blink_rate | -13.11 | -46.28 | -28.55 | -30.92 | -28.52 | -28.25 | -50.35 | +9.00 | -11.10 | -23.42 | -16.42 | -3.08 | -54.83 | -4.15 | -21.63 | +17.37 |
+| response_delay | -1.08 | -2.56 | +0.91 | +0.73 | +4.39 | +2.62 | +2.35 | -1.58 | +1.56 | +0.57 | +1.57 | +1.08 | -0.17 | +1.81 | +2.80 | +0.94 |
+| pause_rate | +0.47 | -0.40 | -0.05 | -0.46 | +0.21 | +0.38 | -0.09 | -0.54 | -0.04 | -0.28 | +0.19 | -0.12 | -0.76 | +0.03 | +0.36 | +0.06 |
+| avg_pause_length | -1.67 | +0.03 | -0.09 | -0.16 | +0.72 | +0.14 | +1.04 | -0.99 | +0.07 | +0.41 | +0.31 | -0.36 | +0.70 | +0.29 | -0.16 | +0.67 |
+| pause_variance | -6.46 | +8.47 | -0.54 | -0.19 | +4.21 | -1.41 | +13.76 | +1.00 | +0.64 | +0.92 | +1.17 | -0.10 | +3.29 | +1.27 | +0.26 | +1.39 |
+| filler_rate | -1.27 | -1.39 | -0.87 | -1.01 | -1.09 | -0.53 | -0.35 | +1.26 | -0.44 | +0.39 | -0.37 | +0.13 | -0.02 | +0.10 | -0.66 | -0.54 |
+| speaking_rate | +0.43 | +0.44 | +0.16 | +0.22 | -0.52 | -0.34 | -0.54 | +0.41 | +0.22 | +0.17 | -0.31 | +0.76 | -0.24 | -0.21 | -0.16 | -0.04 |
+| lexical_diversity | +0.27 | +1.11 | +0.15 | +0.23 | +1.96 | +1.04 | +1.16 | +0.11 | +0.24 | +1.70 | +0.42 | +0.74 | +0.01 | +0.62 | +0.37 | +0.88 |
+| sentence_complexity | +0.79 | -0.64 | -1.00 | -1.14 | -1.46 | -0.41 | -1.59 | +0.46 | -1.25 | -1.07 | +0.23 | -2.08 | -2.78 | -0.39 | -0.97 | -0.53 |
+
+### 4.4 Mean feature values per volunteer and condition
+
+| Feature | V01 U | V01 A | V02 U | V02 A | V03 U | V03 A | V04 U | V04 A | V05 U | V05 A | V06 U | V06 A | V07 U | V07 A | V08 U | V08 A | V09 U | V09 A | V10 U | V10 A | V11 U | V11 A | V12 U | V12 A | V13 U | V13 A | V14 U | V14 A | V15 U | V15 A | V16 U | V16 A |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| fixation_stability | 407.86 | 1249.86 | 456.25 | 944.00 | 1180.84 | 2166.98 | 314.51 | 1912.58 | 140.03 | 532.80 | 223.32 | 2448.57 | 223.24 | 3560.34 | 1485.01 | 839.95 | 381.32 | 450.62 | 1792.12 | 2380.33 | 790.58 | 973.38 | 292.64 | 1169.76 | 1758.87 | 5836.56 | 276.37 | 327.25 | 1892.24 | 684.02 | 1947.16 | 1966.52 |
+| saccade_rate | 1.00 | 0.55 | 3.38 | 4.62 | 0.57 | 0.17 | 1.09 | 0.45 | 3.24 | 0.56 | 3.29 | 1.36 | 1.07 | 0.30 | 0.05 | 0.07 | 0.29 | 0.19 | 0.03 | 0.03 | 0.39 | 0.27 | 1.73 | 0.38 | 0.56 | 0.02 | 0.66 | 0.31 | 0.02 | 0.13 | 0.31 | 0.07 |
+| offcam_deviation | 0.04 | 0.02 | 0.04 | 0.03 | 0.03 | 0.02 | 0.05 | 0.02 | 0.07 | 0.03 | 0.05 | 0.02 | 0.05 | 0.01 | 0.03 | 0.03 | 0.04 | 0.04 | 0.02 | 0.02 | 0.03 | 0.02 | 0.05 | 0.03 | 0.03 | 0.01 | 0.05 | 0.04 | 0.02 | 0.03 | 0.02 | 0.02 |
+| blink_rate | 45.36 | 32.24 | 71.59 | 25.31 | 55.62 | 27.07 | 51.74 | 20.82 | 79.05 | 50.53 | 58.50 | 30.57 | 55.26 | 4.91 | 43.59 | 52.59 | 49.55 | 38.45 | 42.38 | 18.96 | 44.89 | 28.47 | 25.78 | 22.70 | 69.09 | 14.26 | 38.27 | 34.12 | 49.54 | 27.91 | 24.43 | 41.80 |
+| response_delay | 4.59 | 3.51 | 4.88 | 2.33 | 2.23 | 3.13 | 1.46 | 2.19 | 0.65 | 5.04 | 0.47 | 3.10 | 0.96 | 3.31 | 3.24 | 1.66 | 4.91 | 6.47 | 1.84 | 2.42 | 2.44 | 4.00 | 1.14 | 2.22 | 1.87 | 1.69 | 1.41 | 3.22 | 1.78 | 4.58 | 0.97 | 1.91 |
+| pause_rate | 1.95 | 2.42 | 1.09 | 0.69 | 1.19 | 1.14 | 1.70 | 1.24 | 0.51 | 0.72 | 0.19 | 0.57 | 0.78 | 0.69 | 0.20 | -0.34 | 1.35 | 1.31 | 0.67 | 0.39 | 1.65 | 1.84 | 0.80 | 0.68 | 1.60 | 0.84 | 1.35 | 1.38 | 1.59 | 1.95 | 0.54 | 0.61 |
+| avg_pause_length | 2.86 | 1.19 | 1.62 | 1.65 | 1.77 | 1.68 | 1.12 | 0.96 | 1.13 | 1.85 | 0.86 | 0.99 | 1.11 | 2.15 | 1.03 | 0.04 | 1.22 | 1.28 | 0.80 | 1.22 | 1.01 | 1.33 | 1.03 | 0.67 | 1.36 | 2.06 | 1.17 | 1.46 | 1.36 | 1.19 | 0.98 | 1.65 |
+| pause_variance | 6.95 | 0.49 | 1.86 | 10.33 | 1.33 | 0.79 | 0.68 | 0.49 | 0.80 | 5.01 | 1.69 | 0.28 | 0.57 | 14.33 | 0.01 | 1.01 | 0.98 | 1.62 | 0.13 | 1.05 | 0.16 | 1.33 | 0.16 | 0.06 | 0.87 | 4.17 | 0.66 | 1.93 | 0.72 | 0.98 | 0.20 | 1.58 |
+| filler_rate | 2.30 | 1.03 | 1.51 | 0.12 | 1.12 | 0.24 | 1.11 | 0.10 | 0.89 | -0.21 | 0.53 | 0.01 | -0.09 | -0.44 | 0.90 | 2.15 | 0.13 | -0.30 | -0.52 | -0.13 | -0.23 | -0.60 | -0.12 | 0.01 | -0.56 | -0.57 | -0.50 | -0.40 | 0.44 | -0.22 | 0.65 | 0.11 |
+| speaking_rate | -1.30 | -0.87 | -0.67 | -0.23 | -0.74 | -0.58 | -0.42 | -0.20 | -0.21 | -0.73 | 0.08 | -0.27 | 0.01 | -0.53 | -0.88 | -0.47 | -0.66 | -0.45 | -0.53 | -0.36 | -0.22 | -0.53 | -0.63 | 0.13 | -0.19 | -0.43 | 0.34 | 0.14 | -0.42 | -0.58 | 0.26 | 0.21 |
+| lexical_diversity | -0.47 | -0.21 | -1.26 | -0.15 | -0.34 | -0.19 | -0.30 | -0.07 | -2.02 | -0.05 | -1.24 | -0.19 | -0.96 | 0.20 | -1.22 | -1.10 | -1.90 | -1.66 | -1.87 | -0.17 | -0.88 | -0.46 | -0.81 | -0.07 | -0.17 | -0.16 | -1.16 | -0.54 | -0.76 | -0.39 | -1.15 | -0.27 |
+| sentence_complexity | 0.42 | 1.21 | 0.63 | -0.01 | 0.97 | -0.03 | 1.03 | -0.11 | 1.23 | -0.23 | 0.24 | -0.17 | 1.14 | -0.44 | 1.13 | 1.59 | 2.08 | 0.83 | 0.99 | -0.08 | 0.26 | 0.49 | 1.99 | -0.09 | 3.14 | 0.36 | 0.91 | 0.53 | 1.80 | 0.83 | 0.82 | 0.29 |
+
+U = unassisted, A = assisted.
+
+### 4.5 By question type (pairs where assisted was higher)
+
+| Feature | Behavioral (32 pairs) | Conceptual (16 pairs) | Opinion (16 pairs) |
+| --- | --- | --- | --- |
+| fixation_stability | 26/32 | 11/15 | 13/16 |
+| saccade_rate | 5/32 | 2/15 | 5/16 |
+| offcam_deviation | 5/32 | 4/15 | 2/16 |
+| blink_rate | 7/32 | 4/15 | 3/16 |
+| response_delay | 22/32 | 10/16 | 13/16 |
+| pause_rate | 16/32 | 6/16 | 9/16 |
+| avg_pause_length | 15/32 | 12/16 | 10/16 |
+| pause_variance | 13/32 | 12/16 | 9/16 |
+| filler_rate | 5/32 | 7/16 | 5/16 |
+| speaking_rate | 22/32 | 7/16 | 3/16 |
+| lexical_diversity | 26/32 | 12/16 | 14/16 |
+| sentence_complexity | 8/32 | 6/16 | 5/16 |
+
+---
+
+<!-- END AUTO-GENERATED: everything below this line is hand-written and kept -->
+
+> Sections 5–7 are hand-written and were last revised after volunteer 04. Numbers quoted here may be out of date after new sessions; check them against Sections 1–4.
+
+## 5. Interpretation
+
+### 5.1 Consistent signals
+
+- **Gaze:** with the assistant, volunteers held a steadier gaze closer to the camera and blinked less. This fits reading text: reading suppresses blinking and keeps the eyes in a narrow area. For this study, the assistant window sits close to the camera. Because the effect appeared in both round orders, it is not explained by settling in over the session.
+- **Fluency:** assisted speech had fewer fillers, a faster speaking rate and more varied vocabulary. This fits reading out a prepared, well-formed answer instead of composing one.
+
+### 5.2 Response delay
+
+Response delay went in opposite directions for the two volunteer pairs:
+
+- **01 and 02** answered faster when assisted (4.6 → 3.5 s and 4.9 → 2.3 s). Their unassisted answers began late, which suggests they spent time thinking before speaking.
+- **03 and 04** answered slower when assisted (2.2 → 3.1 s and 1.5 → 2.2 s). They started unassisted answers quickly and seem to have waited for the assistant's text to appear.
+
+Each pair contains one volunteer from each round order, so round order does not explain the split. Two other explanations remain. The pairs had different question orders, and the volunteers may have differed in strategy, for example starting to speak at once versus waiting to read. The assistant's own delay of 0.7–3.1 s (Section 3.3) also puts a lower limit on how quickly an assisted volunteer can start reading. On this data, `response_delay` cannot be relied on as a cue.
+
+### 5.3 Saccade rate of volunteer 02
+
+Volunteer 02's saccade rate (3.4 unassisted and 4.6 assisted) is 3–6× that of the other volunteers (0.2–1.1). They are also the only volunteer whose saccade rate rose with the assistant. This is consistent with the known limitation of `saccade_rate` on webcam clips, which may be inflated for people wearing glasses because `SACCADE_VELOCITY_THRESHOLD` has not been validated. It should be checked whether volunteer 02 wore glasses. Until then, saccade findings should be reported with caution.
+
+### 5.4 Pause features
+
+The pause features (rate, mean length and variance) mostly fell with assistance but were not consistent. Pause variance in particular is dominated by single answers: volunteer 01 dropped by 6.5 and volunteer 02 rose by 8.5. These features are likely to be noisy at this sample size.
+
+### 5.5 Sentence complexity
+
+Sentence complexity fell with assistance for three volunteers and rose for the pilot volunteer (01). This runs against the expectation that assisted answers read from scripted text would be more complex. It may reflect how the measure handles short, list-like unassisted answers.
+
+---
+
+## 6. Limitations
+
+- **Sample size:** with four speakers and 16 paired answers, no significance testing is meaningful yet. The project's planned evaluation (leave-speaker-out cross-validation, speaker-bootstrap confidence intervals and a within-speaker permutation test) needs more volunteers.
+- **Pilot data:** volunteer 01 is a pilot session and is excluded from `data/labels.csv`. It is included here for comparison only. Without it, the six consistent features still agree across volunteers 02–04.
+- **Feature scales:** gaze features are raw, uncalibrated values because the gaze baseline is flagged as domain-mismatched. They can be compared within a speaker but not directly across speakers.
+- **Answer length:** assisted answers were generally longer than unassisted ones, so rate-based features may partly reflect answer length.
+- **Assistant timing:** the delay before the assistant's answer appears, plus its 0.2–1.1 s overhead, affects latency features in the assisted condition.
+
+---
+
+## 7. Next Steps
+
+1. Run `python src/build_features.py` to write `data/features.csv` for the volunteers in `labels.csv` (02–04).
+2. Check whether volunteer 02 wore glasses, and validate `SACCADE_VELOCITY_THRESHOLD` before relying on `saccade_rate`.
+3. Collect the remaining volunteers (target 10–12) before training and evaluating the model with `train_model.py`.
+4. Review the response-delay split as more volunteers come in, and decide whether it reflects individual strategy or the assistant's timing.

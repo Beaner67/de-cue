@@ -33,6 +33,8 @@ To prevent **ordering effects** (e.g., fatigue, relaxation, or getting accustome
 | `volunteer_01`, `03`, `05`, `07`, `09`, `11` | **Unassisted** (Set A) | **Assisted** (Set B) |
 | `volunteer_02`, `04`, `06`, `08`, `10`, `12` | **Assisted** (Set A) | **Unassisted** (Set B) |
 
+* **Question Order Within a Round:** The assistant tool asks the 4 questions in a balanced Latin square (Williams) order instead of Q1 to Q4. Volunteers of the same parity step through four orders (`01`, `03`, `05`, `07` get orders 1 to 4, then `09` starts again at order 1; likewise `02`, `04`, `06`, `08`). Across each group of four, every question is asked once in every position and directly follows every other question exactly once. Read the questions in the order the control panel shows; the order is also saved in `session_log.jsonl`.
+
 ---
 
 ## 3. Standardized Question Bank
@@ -68,19 +70,21 @@ Each volunteer answers **4 questions per round** (2 behavioral, 2 technical). Th
 ## 4. Verbal Scripts for Interviewer
 
 ### 4.1 Welcome & Introduction (Read verbatim)
-> *"Hi [Volunteer Name], thank you for participating in this research study today. The entire session will take around 25 minutes. We will conduct two short mock interview rounds with 4 questions each. Before we begin, please make sure you have reviewed and signed the consent form. You can stop or take a break at any point."*
+> *"Hi [Volunteer Name], thank you for participating in this research study today. The entire session will take around 25 minutes. We will conduct two short mock interview rounds with 4 questions each. Please treat this exactly like a real interview: no outside help of any kind is allowed, so no notes, phones, web searches, other AI tools, or anyone helping you. The only help you may use is the assistant tool I give you, and only in the round where it is on. Before we begin, please make sure you have reviewed and signed the consent form. You can stop or take a break at any point."*
 
 ---
 
 ### 4.2 Before the Unassisted Round
-> *"In this round, you will answer 4 standard interview questions purely off the top of your head, just like a normal job interview. Speak naturally at your normal pace. If you need a moment to think before speaking, that is completely fine. Ready? Let's start with Question 1..."*
+> *"In this round, you will answer 4 standard interview questions purely off the top of your head, just like a normal job interview. Speak naturally at your normal pace. If you need a moment to think before speaking, that is completely fine. No notes, phone, web search, other AI tools, or anyone else's help. Ready? Let's start with Question 1..."*
 
 ---
 
 ### 4.3 Before the Assisted Round (The Covert Incentive)
-> *"In this round, you will have an AI assistant tool active on your screen. As I ask each question, the assistant will generate an answer in real-time.*  
+> *"In this round, you will have an AI assistant tool active on your screen. As I ask each question, the assistant will generate an answer in real-time. It takes a moment to appear after each question: you can wait for it, or fill the moment naturally as you would in a real interview.*  
 >  
-> ***Your primary objective in this round is to deceive the interviewer:*** *try your best to pass as a completely natural, unassisted candidate. You may read from the assistant, rephrase its points, or blend it with your own words. Maintain normal eye contact and conversational rhythm so that someone reviewing your video wouldn't suspect you are using an AI. Ready? Here comes Question 1..."*
+> ***You must use the suggested answer for every question:*** *read from the assistant, rephrase its points, or blend it with your own words, but the main points should come from the assistant. Don't ignore it and answer from your own head.*  
+>  
+> ***Your other objective in this round is to deceive the interviewer:*** *try your best to pass as a completely natural, unassisted candidate. This assistant is the only help allowed: no notes, phone, other AI tools, or anyone else's help. Maintain normal eye contact and conversational rhythm so that someone reviewing your video wouldn't suspect you are using an AI. Ready? Here comes Question 1..."*
 
 ---
 
@@ -95,7 +99,7 @@ ffmpeg -i session_raw.mp4 -ss 00:01:23 -to 00:02:15 -c:v copy -c:a copy data/raw
 ```
 
 ### 5.2 Folder Organization Standard
-Store the video clips under [data/raw/](file:///e:/Yoihenba/Thesis%20project/model%20training/ai-interview-detection/data/raw/) using this standardized directory tree:
+Store the video clips under [data/raw/](../data/raw/) using this standardized directory tree:
 
 ```text
 data/raw/
@@ -118,7 +122,7 @@ data/raw/
 
 Once clips are saved in `data/raw/`:
 
-1. **Add the entries to [data/labels.csv](file:///e:/Yoihenba/Thesis%20project/model%20training/ai-interview-detection/data/labels.csv):**
+1. **Add the entries to [data/labels.csv](../data/labels.csv):**
    ```csv
    clip_id,volunteer_id,condition,question_num,question_type,label,video_path,audio_path,question_end_time
    v01_unassisted_q1,volunteer_01,unassisted,1,behavioral,0,data/raw/volunteer_01/unassisted_q1.mp4,,0.0
