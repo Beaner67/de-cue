@@ -163,6 +163,20 @@ centering depends on this.
 Run every command from the project root. The scripts don't depend on the
 working directory, because all paths are anchored in `src/paths_config.py`.
 
+**One command.** `run_all` (Windows: `run_all.bat`, or
+`python run_all.py`) runs steps 2, 4, 5 and 6 below in order with the
+project venv and stops at the first failure. It checks the Stage 1 datasets
+first, so a missing drive never overwrites `models/baseline_stats.json`.
+
+```powershell
+.\run_all                  # full run: Stage 1, features, train, ablation (permutations 1000)
+.\run_all --quick          # reuse data/features.csv: train + ablation only
+.\run_all --fast           # skip the permutation tests (quick check, no p-values)
+.\run_all --from features  # start at a later step (stage1 | features | train | evaluate)
+```
+
+The individual steps:
+
 ```bash
 # 1. Check that the Stage 1 datasets can be found
 python src/pretrain_calibration.py --check-paths
